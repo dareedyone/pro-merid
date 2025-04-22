@@ -1,0 +1,40 @@
+version: '3.9'
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.${NODE_ENV}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+      - mongo
+
+  postgres:
+    image: postgres:15
+    env_file:
+      - .env.${NODE_ENV}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mongo:
+    image: mongo:latest
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
+  mongo_data:
