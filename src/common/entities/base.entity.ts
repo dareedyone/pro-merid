@@ -7,7 +7,7 @@ export abstract class BaseTimeEntity<Optional = never> {
   id!: string;
 
   @Property()
-  createdAt = new Date();
+  createdAt: Date = new Date();
 
   // @Property({ onUpdate: () => new Date() })
   // updatedAt = new Date();

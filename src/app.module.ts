@@ -1,20 +1,22 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config'; //ConfigService
+import { ThrottlerModule } from '@nestjs/throttler';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './modules/user/user.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { ChatModule } from './modules/chat/chat.module';
-// import databaseConfig from './common/database/database';
+import { JwtModule } from '@nestjs/jwt';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UserModule } from './feature/user/user.module';
+import { AuthModule } from './feature/auth/auth.module';
+import { ChatModule } from './feature/chat/chat.module';
 import { mikroOrmConfigFactory } from './common/database/mikro-orm.config';
-
 import { mongooseConfigFactory } from './common/database/mongoose.config';
-import { LocationModule } from './modules/location/location.module';
-import { EventModule } from './modules/event/event.module';
-import { SuggestionModule } from './modules/suggestion/suggestion.module';
-import { SupportModule } from './modules/support/support.module';
+import { LocationModule } from './feature/location/location.module';
+import { EventModule } from './feature/event/event.module';
+import { SupportModule } from './feature/support/support.module';
+import { QueueModule } from './system/queue/queue.module';
+import { RedisCacheModule } from './system/cache/redis-cache.module';
+import { TaskSchedulerModule } from './system/schedule/schedule.module';
 
 @Module({
   imports: [
@@ -23,7 +25,14 @@ import { SupportModule } from './modules/support/support.module';
       envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
       // load: [databaseConfig],
     }),
-    // MikroOrmModule.forRoot(mikroOrmConfig[0]),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60,
+          limit: 5,
+        },
+      ],
+    }),
     MikroOrmModule.forRootAsync({
       useFactory: mikroOrmConfigFactory,
       inject: [ConfigService],
@@ -32,16 +41,38 @@ import { SupportModule } from './modules/support/support.module';
       useFactory: mongooseConfigFactory,
       inject: [ConfigService],
     }),
-    // MikroOrmModule.forRoot(mikroOrmConfig[1]),
+    // JwtModule.register({
+    //   secret: process.env.JWT_SECRET,
+    //   signOptions: { expiresIn: '7d' },
+    // }),
+    JwtModule.registerAsync({
+      // imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d',
+        },
+      }),
+    }),
+
     UserModule,
     AuthModule,
     ChatModule,
     LocationModule,
     EventModule,
-    SuggestionModule,
     SupportModule,
+    QueueModule,
+    RedisCacheModule,
+    TaskSchedulerModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: ThrottlerGuard,
+    // },
+  ],
 })
 export class AppModule {}

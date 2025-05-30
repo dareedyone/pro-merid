@@ -32,7 +32,7 @@ import { Country } from '../location/country.entity';
 import { DateProfile } from '../profile/date.profile';
 import { FriendProfile } from '../profile/friend.profile';
 import { RangeEmb } from '../generic/range.emb';
-import { Anchor } from 'src/modules/user/entities/user/anchor.entity';
+import { Anchor } from 'src/feature/user/entities/user/anchor.entity';
 
 @Entity()
 export class User {

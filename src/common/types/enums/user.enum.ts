@@ -13,7 +13,7 @@ export enum Gender {
   UNKNOWN = 'Unknown', // Privacy option
 }
 
-export enum UserRole {
+export enum UserType {
   USER = 'user',
   ADMIN = 'admin',
   SUPPORT = 'support',

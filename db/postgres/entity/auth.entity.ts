@@ -12,11 +12,11 @@ import {
 } from '@mikro-orm/core';
 import { hash } from 'bcryptjs';
 import { User } from './user/user.entity';
-import { UserRole } from 'src/common/types/enums/user.enum';
-import { Anchor } from 'src/modules/user/entities/user/anchor.entity';
+import { UserType } from 'src/common/types/enums/user.enum';
+import { Anchor } from 'src/feature/user/entities/user/anchor.entity';
 
 @Entity()
-export class Auth {
+export class AuthDeprecated {
   @PrimaryKey()
   id!: number;
 
@@ -43,10 +43,10 @@ export class Auth {
   isEmailVerified!: boolean;
 
   @Enum({
-    items: () => UserRole,
-    default: UserRole.USER,
+    items: () => UserType,
+    default: UserType.USER,
   })
-  role!: UserRole;
+  role!: UserType;
 
   @BeforeCreate()
   @BeforeUpdate()

@@ -38,8 +38,8 @@
 // src/database/mikroorm.config.ts
 import { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../../modules/user/entities/user/user.entity';
-import { Auth } from '../modules/auth/entities/auth.entity';
+import { User } from '../../feature/user/entities/user/user.entity';
+import { Auth } from 'src/feature/auth/entities/auth.entity';
 
 export const mikroOrmConfigFactory = (
   configService: ConfigService,
