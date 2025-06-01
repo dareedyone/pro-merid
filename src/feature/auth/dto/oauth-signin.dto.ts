@@ -1,13 +1,13 @@
-import { IsEmail, IsString, IsIn } from 'class-validator';
+import { IsString, IsIn } from 'class-validator';
 
 export class OAuthSignInDto {
-  @IsEmail()
-  email: string;
+  // @IsEmail()
+  // email: string;
 
   @IsString()
   @IsIn(['google', 'apple'])
   provider: 'google' | 'apple';
 
   @IsString()
-  providerId: string;
+  idToken: string;
 }

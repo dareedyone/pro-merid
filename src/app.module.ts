@@ -46,7 +46,6 @@ import { TaskSchedulerModule } from './system/schedule/schedule.module';
     //   signOptions: { expiresIn: '7d' },
     // }),
     JwtModule.registerAsync({
-      // imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

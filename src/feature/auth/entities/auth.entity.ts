@@ -22,11 +22,8 @@ export class Auth extends BaseTimeEntity {
   @Property({ nullable: true })
   appleId?: string;
 
-  @Property({ default: false })
-  isEmailVerified?: boolean;
-
-  @Property({ nullable: true })
-  emailCode?: string;
+  @Property({ nullable: true, default: null })
+  emailCode?: string | null;
 
   @Property()
   lastCodeSentAt?: Date;
