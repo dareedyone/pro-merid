@@ -10,7 +10,7 @@ import {
   ManyToMany,
   Unique,
   Cascade,
-  Embedded,
+  // Embedded,
 } from '@mikro-orm/core';
 // import { v4 as uuidv4 } from 'uuid';
 // todo: uninstall uuid
@@ -31,7 +31,7 @@ import { Interest } from './character/interest.entity';
 import { Country } from '../../../location/entities/country.entity';
 import { DateProfile } from '../profile/date.profile';
 import { FriendProfile } from '../profile/friend.profile';
-import { RangeEmb } from 'src/common/entities/range.emb';
+// import { RangeEmb } from 'src/common/entities/range.emb';
 import { Anchor } from './anchor.entity';
 
 @Entity()
@@ -108,14 +108,11 @@ export class User {
   @Enum({ items: () => MaritalStatus, default: MaritalStatus.UNKNOWN })
   maritalStatus!: MaritalStatus;
 
-  // @Enum({
-  //   items: () => YesNo,
-  //   default: YesNo.NO,
-  // })
-  // hasChildren!: YesNo;
+  // @Embedded(() => RangeEmb)
+  // children = new RangeEmb();
 
-  @Embedded(() => RangeEmb)
-  hasChildren = new RangeEmb(1, 5);
+  @Property({ nullable: true })
+  children?: number;
 
   @Enum({
     items: () => DietaryPreference,
@@ -126,11 +123,11 @@ export class User {
   @ManyToMany(() => Interest)
   interests = new Collection<Interest>(this);
 
-  @Property({ default: false, type: 'boolean' })
-  emailVerified?: boolean = false;
+  // @Property({ default: false, type: 'boolean' })
+  // emailVerified?: boolean = false;
 
-  @Property({ default: false, type: 'boolean' })
-  phoneVerified?: boolean = false; //todo: offload ids for other countries id
+  // @Property({ default: false, type: 'boolean' })
+  // phoneVerified?: boolean = false; //todo: offload ids for other countries id
 
   @Property({ nullable: true })
   faceVerified?: boolean = false;
@@ -157,11 +154,11 @@ export class User {
   })
   friendProfile?: FriendProfile;
 
-  @Property()
-  createdAt = new Date();
+  @Property({ nullable: true })
+  createdAt? = new Date();
 
-  @Property({ onUpdate: () => new Date() })
-  updatedAt = new Date();
+  @Property({ onUpdate: () => new Date(), nullable: true })
+  updatedAt? = new Date();
 }
 
 // note: do not need to split user into different profiles since anchor and admin would not require first and last name.
