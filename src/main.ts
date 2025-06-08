@@ -31,6 +31,8 @@ async function bootstrap() {
     new ValidationPipe({
       // disableErrorMessages: true,
       whitelist: true,
+      forbidNonWhitelisted: true, // optionally throw if unknown fields are present
+      transform: true,
     }),
   );
   app.useGlobalInterceptors(

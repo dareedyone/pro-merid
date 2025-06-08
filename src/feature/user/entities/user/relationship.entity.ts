@@ -1,5 +1,11 @@
-import { Entity, PrimaryKey, OneToOne, Enum, Property } from '@mikro-orm/core';
-import { User } from './user.entity';
+import {
+  Entity,
+  PrimaryKey,
+  OneToOne,
+  Enum,
+  Property,
+  Embedded,
+} from '@mikro-orm/core';
 import {
   IntimacyBeliefType,
   LoveLanguageType,
@@ -10,6 +16,7 @@ import {
 } from 'src/common/types/enums/user.enum';
 import { YesNo } from 'src/common/types/enums/other.enum';
 import { DateProfile } from '../profile/date.profile';
+import { RangeEmb } from 'src/common/entities/range.emb';
 
 @Entity()
 export class Relationship {
@@ -17,7 +24,7 @@ export class Relationship {
   id!: number;
 
   @OneToOne(() => DateProfile, (dateProfile) => dateProfile.personality)
-  dateProfile!: User;
+  dateProfile!: DateProfile;
 
   @Enum({
     items: () => RelationshipBeliefType,
@@ -32,7 +39,7 @@ export class Relationship {
   intimacyBelief: IntimacyBeliefType;
 
   @Property({ type: 'jsonb', nullable: true })
-  expressLoveLanguage!: Partial<Record<LoveLanguageType, number>>;
+  expressLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
 
   @Enum({
     items: () => ParentingStyleType,
@@ -57,6 +64,9 @@ export class Relationship {
     default: YesNo.UNSURE,
   })
   astronology: YesNo;
+
+  @Embedded(() => RangeEmb, { nullable: true })
+  wantChildren?: RangeEmb;
 
   // note: only use it to display the user sign for everyone, but in addition to that for paid use in filtering
 

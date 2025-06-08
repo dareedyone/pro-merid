@@ -5,17 +5,17 @@ import { User } from 'src/feature/user/entities/user/user.entity';
 import { AdministrativeDivision } from 'src/feature/location/entities/admin-division.entity';
 
 export abstract class BaseLocationProfileEntity extends BaseTimeEntity {
-  @Enum({ items: () => LocationType, default: LocationType.CURRENT })
-  type: LocationType;
+  @Enum({ items: () => LocationType, default: LocationType.CURRENT }) // todo: review current due to flight mode
+  type?: LocationType;
 
   @ManyToOne(() => User)
   user!: User;
 
-  @Property({ columnType: 'geometry(Point, 4326)', nullable: true })
-  coordinates?: object;
+  @Property({ columnType: 'geometry(Point, 4326)' })
+  coordinates: object;
 
-  @ManyToOne(() => AdministrativeDivision, { nullable: true })
-  location?: AdministrativeDivision;
+  @ManyToOne(() => AdministrativeDivision)
+  location: AdministrativeDivision;
 
   @Property({ default: false })
   idVerified: boolean = false;

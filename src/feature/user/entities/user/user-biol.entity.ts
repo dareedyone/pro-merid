@@ -1,5 +1,4 @@
 import { Entity, PrimaryKey, Property, OneToOne, Enum } from '@mikro-orm/core';
-import { User } from './user.entity';
 import { BodyType } from 'src/common/types/enums/user.enum';
 import { Genotype, RhFactor, YesNo } from 'src/common/types/enums/other.enum';
 import { DateProfile } from '../profile/date.profile';
@@ -10,7 +9,7 @@ export class UserBiol {
   id!: number;
 
   @OneToOne(() => DateProfile, (dateProfile) => dateProfile.biol)
-  dateProfile!: User;
+  dateProfile!: DateProfile;
 
   @Property({ nullable: true })
   claimedHeightCm?: number;

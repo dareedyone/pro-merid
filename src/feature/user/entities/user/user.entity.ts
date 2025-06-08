@@ -20,6 +20,7 @@ import {
   EducationLevel,
   Gender,
   MaritalStatus,
+  PetPreference,
   ReligiousLevel,
   SexualOrientation,
   SubstanceStatus,
@@ -102,14 +103,21 @@ export class User {
   @Enum({ items: () => SexualOrientation, default: SexualOrientation.UNKNOWN })
   sexualOrientation!: SexualOrientation;
 
-  @Enum({ items: () => Gender, array: true, default: [] })
-  interestedIn!: Gender[];
+  // @Enum({ items: () => Gender, array: true, default: [] })
+  // interestedIn!: Gender[];
 
   @Enum({ items: () => MaritalStatus, default: MaritalStatus.UNKNOWN })
   maritalStatus!: MaritalStatus;
 
   // @Embedded(() => RangeEmb)
   // children = new RangeEmb();
+
+  @Enum({
+    items: () => PetPreference,
+    default: PetPreference.NONE,
+    nullable: true,
+  })
+  petPreference?: PetPreference;
 
   @Property({ nullable: true })
   children?: number;
@@ -130,7 +138,10 @@ export class User {
   // phoneVerified?: boolean = false; //todo: offload ids for other countries id
 
   @Property({ nullable: true })
-  faceVerified?: boolean = false;
+  faceVerified?: boolean = false; // todo handle face verification
+
+  @Property({ nullable: true })
+  ageVerified?: boolean = false;
 
   @Enum({ items: () => SubstanceStatus, default: SubstanceStatus.UNKNOWN })
   smokingStatus: SubstanceStatus;
@@ -141,8 +152,11 @@ export class User {
   @Enum({ items: () => SubstanceStatus, default: SubstanceStatus.UNKNOWN })
   drugUseStatus: SubstanceStatus;
 
-  @Property({ default: false, type: 'boolean' })
-  isActivated?: boolean = false;
+  @Property({ default: false, nullable: true })
+  isCeleb?: boolean = false;
+
+  @Property({ default: true, type: 'boolean' })
+  isActivated?: boolean = true;
 
   @OneToOne(() => DateProfile, (dateProfile) => dateProfile.user, {
     cascade: [Cascade.ALL],

@@ -1,5 +1,4 @@
 import { Entity, PrimaryKey, OneToOne, Enum } from '@mikro-orm/core';
-import { User } from '../user.entity';
 import {
   DressSenseMen,
   DressSenseWomen,
@@ -19,7 +18,7 @@ export class Personality {
   id!: number;
 
   @OneToOne(() => DateProfile, (dateProfile) => dateProfile.personality)
-  dateProfile!: User;
+  dateProfile!: DateProfile;
 
   @Enum({
     items: () => FinancialAttitudeType,

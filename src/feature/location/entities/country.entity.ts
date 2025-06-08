@@ -7,11 +7,11 @@ import {
   Index,
   Unique,
 } from '@mikro-orm/core';
-import { BaseSingleEntity } from '../generic/base.single.entity';
 import { Continent } from './continent.entity';
 import { Ethnic } from './ethnic.entity';
 import { AdministrativeDivision } from './admin-division.entity';
 import { Region } from './region.entity';
+import { BaseSingleEntity } from 'src/common/entities/base.single.entity';
 
 @Entity()
 export class Country extends BaseSingleEntity {

@@ -1,10 +1,10 @@
-import { Entity, Property, ManyToOne, Index, Unique } from '@mikro-orm/core';
+import { Entity, Property, ManyToOne, Unique } from '@mikro-orm/core';
 import { Religion } from './religion.entity';
+import { BaseSingleEntity } from 'src/common/entities/base.single.entity';
 
 @Entity()
-export class ReligionSect {
+export class ReligionSect extends BaseSingleEntity {
   @Property()
-  @Index()
   @Unique()
   declare name: string;
 
@@ -14,3 +14,4 @@ export class ReligionSect {
   @ManyToOne(() => Religion)
   religion!: Religion;
 }
+// todo: review index on base.single.entity.ts since it is like that only id would be used for searching
