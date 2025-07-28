@@ -1,6 +1,6 @@
-import { EntityManager } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { Continent } from 'db/postgres/entity/location/continent.entity';
+import { Profession } from 'src/feature/user/entities/user/character/profession.entity';
 
 export class ProfessionSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
@@ -140,7 +140,7 @@ export class ProfessionSeeder extends Seeder {
     ];
 
     await em.persistAndFlush(
-      professions.map((data) => em.create(Continent, data)),
+      professions.map((data) => em.create(Profession, data)),
     );
   }
 }

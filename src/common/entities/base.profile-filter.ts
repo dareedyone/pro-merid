@@ -2,8 +2,8 @@ import { Entity, Property, ManyToOne, Embedded } from '@mikro-orm/core';
 import { MaritalStatus } from 'src/common/types/enums/user.enum';
 // import { YesNo } from 'src/types/enums/other.enum';
 import { BaseTimeEntity } from './base.entity';
-import { User } from '../user/user.entity';
 import { RangeEmb } from './range.emb';
+import { User } from 'src/feature/user/entities/user/user.entity';
 
 @Entity()
 export abstract class BaseProfileFilter extends BaseTimeEntity {

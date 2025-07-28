@@ -17,6 +17,9 @@ import { SupportModule } from './feature/support/support.module';
 import { QueueModule } from './system/queue/queue.module';
 import { RedisCacheModule } from './system/cache/redis-cache.module';
 import { TaskSchedulerModule } from './system/schedule/schedule.module';
+import { DatingModule } from './feature/dating/dating.module';
+import { NotificationService } from './system/notification/notification.service';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -64,10 +67,13 @@ import { TaskSchedulerModule } from './system/schedule/schedule.module';
     QueueModule,
     RedisCacheModule,
     TaskSchedulerModule,
+    DatingModule,
+    CommonModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
+    NotificationService,
     // {
     //   provide: APP_GUARD,
     //   useClass: ThrottlerGuard,

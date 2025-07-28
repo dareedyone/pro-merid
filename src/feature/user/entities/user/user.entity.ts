@@ -30,10 +30,10 @@ import { Ethnic } from '../../../location/entities/ethnic.entity';
 import { ReligionSect } from './character/religion-sect.entity';
 import { Interest } from './character/interest.entity';
 import { Country } from '../../../location/entities/country.entity';
-import { DateProfile } from '../profile/date.profile';
 import { FriendProfile } from '../profile/friend.profile';
 // import { RangeEmb } from 'src/common/entities/range.emb';
 import { Anchor } from './anchor.entity';
+import { DatingProfile } from 'src/feature/dating/entities/dating.profile';
 
 @Entity()
 export class User {
@@ -138,7 +138,7 @@ export class User {
   // phoneVerified?: boolean = false; //todo: offload ids for other countries id
 
   @Property({ nullable: true })
-  faceVerified?: boolean = false; // todo handle face verification
+  isFaceVerified?: boolean = false; // todo handle face verification
 
   @Property({ nullable: true })
   ageVerified?: boolean = false;
@@ -158,10 +158,10 @@ export class User {
   @Property({ default: true, type: 'boolean' })
   isActivated?: boolean = true;
 
-  @OneToOne(() => DateProfile, (dateProfile) => dateProfile.user, {
+  @OneToOne(() => DatingProfile, (datingProfile) => datingProfile.user, {
     cascade: [Cascade.ALL],
   })
-  dateProfile?: DateProfile;
+  datingProfile?: DatingProfile;
 
   @OneToOne(() => FriendProfile, (friendProfile) => friendProfile.user, {
     cascade: [Cascade.ALL],

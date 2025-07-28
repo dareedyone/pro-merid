@@ -4,11 +4,18 @@ import {
   Body,
   ValidationPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SendEMailCodeDto, VerifyEMailCodeDto } from './dto/email.dto';
 import { OAuthSignInDto } from './dto/oauth-signin.dto';
+import { PushTokenDto } from './dto/push-token.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
+import { UserType } from 'src/common/types/enums/user.enum';
+import { Roles } from 'src/common/guards/roles.decorator';
+import { Request } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -24,13 +31,27 @@ export class AuthController {
 
   @Post('verify-code')
   async verifyCode(@Body() dto: VerifyEMailCodeDto) {
-    return this.authService.verifyEmailCode(dto);
+    const data = await this.authService.verifyEmailCode(dto);
+    return {
+      message: 'Code verified successfully',
+      ...data,
+    };
   }
 
   @Post('oauth')
-  async loginGoogle(@Body(new ValidationPipe()) dto: OAuthSignInDto) {
-    return this.authService.oauthLogin(dto);
+  async loginOauth(@Body(new ValidationPipe()) dto: OAuthSignInDto) {
+    const data = await this.authService.oauthLogin(dto);
+    return {
+      message: 'OAuth login successful',
+      ...data,
+    };
   }
 
-  // todo: queue welcome email on user creation - not auth creation
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.USER)
+  @Post('push-token')
+  savePushToken(@Req() req: Request, @Body() pushTokenDto: PushTokenDto) {
+    const authId = req?.user?.sub;
+    return this.authService.updatePushToken(authId, pushTokenDto);
+  }
 }

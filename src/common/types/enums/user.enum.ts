@@ -393,7 +393,7 @@ export enum DietaryPreference {
   OTHER = 'Other', // ❓ Any dietary preference not listed here; users can specify further in their profile.
 }
 export enum LocationType {
-  CURRENT = 1,
+  BASED = 1,
   NATIONALITY = 2,
   ORIGIN = 3,
   GREWUP = 4,
@@ -419,3 +419,16 @@ export enum SpouseFriendshipType {
 //   EMOTIONAL = 'emotional',
 //   SOCIAL = 'social',
 // }
+
+export enum VerificationType {
+  PICTURE = 'picture',
+  ID = 'id',
+  OTHER = 'Other',
+}
+
+export enum VerificationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
+}

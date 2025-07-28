@@ -1,31 +1,26 @@
-import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
-import { Injectable } from '@nestjs/common';
-import { EMAIL_QUEUE, SEND_EMAIL, SEND_EMAIL_CODE } from '../queue.constant';
+import { Process, Processor } from '@nestjs/bull';
+import { Job } from 'bull';
+import { EmailService } from 'src/system/email/email.service';
 import { SendEmailCodeType } from './email.type';
+import { SEND_EMAIL_CODE_JOB, SEND_EMAIL_JOB } from '../const/job';
 
-@Injectable()
-export class EmailQueueService {
-  constructor(@InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue) {}
+@Processor('email')
+export class EmailProcessor {
+  constructor(private readonly emailService: EmailService) {}
 
-  async sendEmailCode(data: SendEmailCodeType) {
-    await this.emailQueue.add(SEND_EMAIL_CODE, data, {
-      attempts: 2,
-      backoff: { type: 'exponential', delay: 3000 },
-    });
+  @Process(SEND_EMAIL_CODE_JOB)
+  async handleSendEmailCode(job: Job<SendEmailCodeType>) {
+    await this.emailService.sendVerificationCode(job.data.email, job.data.code);
   }
 
-  async sendWelcomeEmail(data: { to: string; subject: string }) {
-    await this.emailQueue.add(data, {
-      delay: 1000,
-      attempts: 3,
-    });
-  }
+  @Process(SEND_EMAIL_JOB)
+  handleSendEmail(job: Job<{ to: string; subject: string; body: string }>) {
+    const { to, subject, body } = job.data;
+    console.log(`📧 Sending email to ${to} | Subject: ${subject}${body}`);
 
-  async sendEmailJob(data: { to: string; subject: string; body: string }) {
-    await this.emailQueue.add(SEND_EMAIL, data, {
-      attempts: 3,
-      backoff: 5000,
-    });
+    // Fake delay to simulate email sending
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    console.log(`✅ Email sent to ${to}`);
   }
 }

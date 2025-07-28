@@ -1,7 +1,6 @@
-import { Entity, PrimaryKey, Property, ManyToOne, Enum } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/core';
 import { User } from './user/user.entity';
-import { FileType } from 'src/common/types/enums/other.enum';
-import { DateLocationProfile } from './profile/date-location.profile';
+import { DatingLocationProfile } from '../../dating/entities/dating-location.profile';
 import { FriendLocationProfile } from './profile/friend-location.profile';
 
 @Entity()
@@ -12,25 +11,32 @@ export class Media {
   @ManyToOne(() => User)
   user!: User;
 
-  @ManyToOne(() => DateLocationProfile, {
+  @ManyToOne(() => DatingLocationProfile, {
     nullable: true,
   })
-  dateLocationProfile?: DateLocationProfile;
+  datingLocationProfile?: DatingLocationProfile;
 
   @ManyToOne(() => FriendLocationProfile, {
     nullable: true,
   })
   friendLocationProfile?: FriendLocationProfile;
 
-  @Property()
-  filename!: string;
+  // @Property()
+  // filename!: string;
 
   @Property()
   url!: string;
 
-  @Enum(() => FileType)
-  fileType: FileType;
+  // @Enum(() => FileType)
+  // fileType: FileType;
 
   @Property()
-  order: number;
+  fileType: string;
+
+  @Property({ type: 'number' })
+  order?: number;
+  // 0 selfie, 1 main, from 2 - others
+
+  @Property({ default: true })
+  isUser?: boolean;
 }

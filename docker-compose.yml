@@ -1,4 +1,87 @@
+# version: '3.8'
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     env_file:
+#       - .env.${NODE_ENV:-development}
+#     ports:
+#       - '3000:3000'
+#     depends_on:
+#       - postgres
+#       - redis
+#       - mongo
+#     networks:
+#       - app-network
+
+#   postgres:
+#     image: postgres:15
+#     container_name: postgres
+#     restart: unless-stopped
+#     env_file:
+#       - .env.${NODE_ENV:-development}
+#     ports:
+#       - '5432:5432'
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+#     networks:
+#       - app-network
+
+#   mongo:
+#     image: mongo:6
+#     restart: unless-stopped
+#     ports:
+#       - '27017:27017'
+#     volumes:
+#       - mongo_data:/data/db
+#     networks:
+#       - app-network
+
+#   redis:
+#     image: redis:7-alpine
+#     container_name: redis
+#     restart: unless-stopped
+#     ports:
+#       - '6379:6379'
+#     networks:
+#       - app-network
+#   # Optional Redis GUI
+#   # redisinsight:
+#   #   image: redislabs/redisinsight:latest
+#   #   container_name: redisinsight
+#   #   ports:
+#   #     - '5540:5540'
+#   #   depends_on:
+#   #     - redis
+#   #   networks:
+#   #     - app-network
+
+#   # Optional PostgreSQL Admin GUI
+#   # pgadmin:
+#   #   image: dpage/pgadmin4
+#   #   container_name: pgadmin
+#   #   restart: unless-stopped
+#   #   environment:
+#   #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#   #     PGADMIN_DEFAULT_PASSWORD: admin
+#   #   ports:
+#   #     - '5050:80'
+#   #   depends_on:
+#   #     - postgres
+#   #   networks:
+#   #     - app-network
+
+# networks:
+#   app-network:
+#     driver: bridge
+
+# volumes:
+#   pgdata:
+#   mongo_data:
+
 version: '3.8'
+
 services:
   app:
     build:
@@ -16,7 +99,7 @@ services:
       - app-network
 
   postgres:
-    image: postgres:15
+    image: postgis/postgis:15-3.3
     container_name: postgres
     restart: unless-stopped
     env_file:
@@ -25,6 +108,7 @@ services:
       - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/init-postgres:/docker-entrypoint-initdb.d
     networks:
       - app-network
 
@@ -46,31 +130,6 @@ services:
       - '6379:6379'
     networks:
       - app-network
-  # Optional Redis GUI
-  # redisinsight:
-  #   image: redislabs/redisinsight:latest
-  #   container_name: redisinsight
-  #   ports:
-  #     - '5540:5540'
-  #   depends_on:
-  #     - redis
-  #   networks:
-  #     - app-network
-
-  # Optional PostgreSQL Admin GUI
-  # pgadmin:
-  #   image: dpage/pgadmin4
-  #   container_name: pgadmin
-  #   restart: unless-stopped
-  #   environment:
-  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
-  #     PGADMIN_DEFAULT_PASSWORD: admin
-  #   ports:
-  #     - '5050:80'
-  #   depends_on:
-  #     - postgres
-  #   networks:
-  #     - app-network
 
 networks:
   app-network:

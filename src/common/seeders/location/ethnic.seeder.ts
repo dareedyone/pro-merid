@@ -1,7 +1,7 @@
-import { EntityManager } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { Country } from 'db/postgres/entity/location/country.entity';
-import { Ethnic } from 'db/postgres/entity/location/ethnic.entity';
+import { Country } from 'src/feature/location/entities/country.entity';
+import { Ethnic } from 'src/feature/location/entities/ethnic.entity';
 
 export class EthnicSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {

@@ -47,6 +47,10 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/no-unsafe-call': 'warn',
       '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      // Add these new rules for better AWS SDK handling
+      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+      '@typescript-eslint/consistent-type-imports': 'error',
     },
   },
 

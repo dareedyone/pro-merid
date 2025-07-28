@@ -3,15 +3,16 @@ import {
   HttpException,
   HttpStatus,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
-import { EntityManager, EntityRepository } from '@mikro-orm/core';
+import { EntityManager, EntityRepository, Populate } from '@mikro-orm/core';
 import { JwtService } from '@nestjs/jwt';
 import { randomInt } from 'crypto';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Auth } from './entities/auth.entity';
 import { User } from '../user/entities/user/user.entity';
 import { Anchor } from '../user/entities/user/anchor.entity';
-import { EmailQueueService } from 'src/system/queue/email/email.queue';
+import { EmailQueueService } from 'src/system/queue/email/email.qservice';
 import {
   AuthResponseType,
   SendEMailCodeDto,
@@ -21,6 +22,8 @@ import { UserType } from 'src/common/types/enums/user.enum';
 import { GoogleAuthService } from './google-auth.service';
 import { AppleAuthService } from './apple-auth.service';
 import { OAuthSignInDto } from './dto/oauth-signin.dto';
+import { PushTokenDto } from './dto/push-token.dto';
+import { OrmHelperService } from 'src/common/services/orm-helper.service';
 
 @Injectable()
 export class AuthService {
@@ -29,10 +32,11 @@ export class AuthService {
     private readonly googleAuthService: GoogleAuthService,
     private readonly appleAuthService: AppleAuthService,
     private readonly em: EntityManager,
+    private readonly ormHelper: OrmHelperService,
     private readonly emailQueueService: EmailQueueService,
     @InjectRepository(Auth) private authRepo: EntityRepository<Auth>,
-    @InjectRepository(User) private userRepo: EntityRepository<User>,
-    @InjectRepository(Anchor) private anchorRepo: EntityRepository<Anchor>,
+    // @InjectRepository(User) private userRepo: EntityRepository<User>,
+    // @InjectRepository(Anchor) private anchorRepo: EntityRepository<Anchor>,
   ) {}
 
   private generateCode(): string {
@@ -41,6 +45,26 @@ export class AuthService {
 
   private isTimeWithin(date?: Date, ms = 60_000): boolean {
     return date ? Date.now() - new Date(date).getTime() < ms : false;
+  }
+
+  async fetchAuthUser(authId: string): Promise<Auth & { user: User }>;
+  async fetchAuthUser(
+    authId: string,
+    addUser: true,
+  ): Promise<Auth & { user: User }>;
+  async fetchAuthUser(authId: string, addUser: false): Promise<Auth>;
+
+  async fetchAuthUser(authId: string, addUser: boolean = true): Promise<Auth> {
+    const populate: Populate<Auth, 'user'> | undefined = addUser
+      ? ['user']
+      : [];
+
+    const auth = await this.authRepo.findOne({ id: authId }, { populate });
+    if (!auth) throw new UnauthorizedException('Auth not found');
+    if (addUser && !auth.user)
+      throw new BadRequestException('This auth is not linked to a user yet.');
+
+    return addUser ? (auth as Auth & { user: User }) : auth;
   }
 
   private async handleAuthResponse(auth: Auth): Promise<AuthResponseType> {
@@ -141,5 +165,14 @@ export class AuthService {
     }
 
     return this.handleAuthResponse(auth);
+  }
+
+  async updatePushToken(authId: string, payload: PushTokenDto): Promise<void> {
+    const auth = await this.authRepo.findOneOrFail({ id: authId });
+
+    if (auth.pushToken !== payload.token) {
+      auth.pushToken = payload.token;
+      await this.em.flush();
+    }
   }
 }

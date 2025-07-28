@@ -33,4 +33,7 @@ export class Auth extends BaseTimeEntity {
     default: UserType.USER,
   })
   role?: UserType;
+
+  @Property({ nullable: true })
+  pushToken?: string;
 }

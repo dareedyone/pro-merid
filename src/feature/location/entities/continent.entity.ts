@@ -1,6 +1,6 @@
 import { Entity, Collection, OneToMany } from '@mikro-orm/core';
-import { BaseSingleEntity } from '../generic/base.single.entity';
 import { Country } from './country.entity';
+import { BaseSingleEntity } from 'src/common/entities/base.single.entity';
 
 @Entity()
 export class Continent extends BaseSingleEntity {

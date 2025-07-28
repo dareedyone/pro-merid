@@ -1,0 +1,3 @@
+export const JWT_SECRET = 'JWT_SECRET';
+export const MAX_PROFILE_PICTURE = 'MAX_PROFILE_PICTURE';
+export const MIN_SIMILARITY = 80;
