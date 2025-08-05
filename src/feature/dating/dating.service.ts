@@ -23,7 +23,6 @@ import {
   CreateDatingRelationshipDto,
   UpdateDatingRelationshipDto,
 } from './dto/dating-relationship.dto';
-// import { CreateDatingLocationProfileDto } from './dto/dating-location-profile.dto';
 import { LocationType } from 'src/common/types/enums/user.enum';
 import {
   CreateLocationProfileMediaDto,
@@ -31,11 +30,7 @@ import {
   UpdateMediaDto,
 } from 'src/common/dtos/location-media.dto';
 import { MediaQueueService } from 'src/system/queue/media/media.qservice';
-import {
-  UploadCategory,
-  UploadPictureResponseObjType,
-  UploadPictureType,
-} from 'src/common/types/interface';
+import { UploadPictureResponseObjType } from 'src/common/types/interface';
 import { GeoFallbackService } from '../location/geo-fallback.service';
 import { Country } from '../location/entities/country.entity';
 import { Region } from '../location/entities/region.entity';
@@ -58,6 +53,10 @@ import {
 import { basename } from 'path';
 import { Readable } from 'stream';
 import { downloadUrlAsMulterFile } from 'src/common/utils/file.util';
+import { UpdateDateFilterDto } from './dto/dating-filter.dto';
+import { DatingFilter } from './entities/dating.filter';
+import { RangeEmbDto } from 'src/common/dtos/range-emb-.dto';
+import { RangeEmb } from 'src/common/entities/range.emb';
 
 @Injectable()
 export class DatingService {
@@ -78,6 +77,8 @@ export class DatingService {
     private personalityRepo: EntityRepository<DatingPersonality>,
     @InjectRepository(DatingRelationship)
     private datingRelationshipRepo: EntityRepository<DatingRelationship>,
+    @InjectRepository(DatingFilter)
+    private datingFilterRepo: EntityRepository<DatingFilter>,
     @InjectRepository(Country) private countryRepo: EntityRepository<Country>,
     @InjectRepository(Region) private regionRepo: EntityRepository<Region>,
     @InjectRepository(Media) private mediaRepo: EntityRepository<Media>,
@@ -257,10 +258,6 @@ export class DatingService {
     this.em.assign(datingProfile.relationship, payload);
     await this.em.persistAndFlush(datingProfile.relationship);
   }
-  // remove should use id only
-  // how to balance user own picture on add and remove
-  // on delete: check if the picture being deleted is user and will affect the current half criteria
-  // if so, throw error (for client warn them to upload delete other pictures or replace), else delete the picture
 
   // update user location: pinned ? with country ?
   async addLocationProfile(
@@ -565,4 +562,79 @@ export class DatingService {
     locationProfile.media.remove(media);
     await this.em.removeAndFlush(media);
   }
+
+  _mapRangeEmbDto(dto?: RangeEmbDto): RangeEmb | undefined {
+    if (!dto) return undefined;
+    return new RangeEmb(dto.min, dto.max);
+  }
+
+  private reduceToAllowedFilters(
+    payload: UpdateDateFilterDto,
+    isPremium = false,
+  ): Omit<UpdateDateFilterDto, 'locationProfileId'> {
+    const {
+      locationProfileId: _,
+      age,
+      religions,
+      intentions,
+      maxDistanceMile,
+      ...rest
+    } = payload;
+
+    const basicFilters = { age, religions, intentions, maxDistanceMile };
+
+    return isPremium ? { ...basicFilters, ...rest } : basicFilters;
+  }
+
+  async updateLocationFilter(
+    authId: string,
+    payload: UpdateDateFilterDto,
+  ): Promise<void> {
+    const { user } = await this.authService.fetchAuthUser(authId);
+    const { locationProfileId } = payload;
+    const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
+      {
+        id: locationProfileId,
+        user,
+      },
+      { populate: ['datingFilter', 'datingProfile'] },
+    );
+
+    const now = new Date();
+
+    const hasControl =
+      new Date(locationProfile.datingProfile?.controlEndsAt || now) > now;
+
+    const hasTrueFynd =
+      new Date(locationProfile.datingProfile?.trueFyndEndsAt || now) > now;
+
+    const hasPremium = hasControl || hasTrueFynd;
+
+    //todo:  use this again for matching: either reset when subscription expires or use only allowed fields for matching
+    const allowedFilters = this.reduceToAllowedFilters(payload, hasPremium);
+
+    if (!locationProfile.datingFilter) {
+      const datingFilter = this.datingFilterRepo.create({
+        user,
+        locationProfile,
+        ...allowedFilters,
+      });
+      await this.em.persist(datingFilter);
+      locationProfile.datingFilter = datingFilter;
+    } else {
+      this.em.assign(locationProfile.datingFilter, allowedFilters);
+    }
+    await this.em.flush();
+  }
+
+  // async getDatingMatches(
+  //   authId: string,
+
+  // next: handle filter .
+  // match
+  // sub
+  // messages
+  // anchor
+  // events
+  // friends
 }

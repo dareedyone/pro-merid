@@ -6,8 +6,8 @@ export abstract class BaseTimeEntity<Optional = never> {
   @PrimaryKey({ type: 'bigint', autoincrement: true })
   id!: string;
 
-  @Property()
-  createdAt: Date = new Date();
+  @Property({ type: 'timestamptz' })
+  createdAt?: Date = new Date();
 
   // @Property({ onUpdate: () => new Date() })
   // updatedAt = new Date();

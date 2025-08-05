@@ -5,6 +5,7 @@ import {
   Cascade,
   Collection,
   OneToMany,
+  Property,
 } from '@mikro-orm/core';
 import { BaseTimeEntity } from 'src/common/entities/base.entity';
 import { DateIntention, Gender } from 'src/common/types/enums/user.enum';
@@ -27,18 +28,6 @@ export class DatingProfile extends BaseTimeEntity {
 
   @Enum({ items: () => Gender, array: true, default: [] })
   interestedIn!: Gender[];
-
-  // @Embedded(() => RangeEmb, { nullable: true })
-  // wantChildren?: RangeEmb; // todo: might fit in with relationship
-
-  // @Enum({
-  //   items: () => PetPreference,
-  //   default: PetPreference.NONE,
-  //   nullable: true,
-  // })
-  // petPreference?: PetPreference; // might fit in with personality
-
-  // if nothing is here then i could move relationship and or personality to user profile
 
   @OneToOne(
     () => DatingPersonality,
@@ -70,4 +59,16 @@ export class DatingProfile extends BaseTimeEntity {
     { cascade: [Cascade.ALL] },
   )
   locationProfiles = new Collection<DatingLocationProfile>(this);
+
+  // three types of subscription
+  // 1. free - no subscription - limited access to filters, likes, don't see who likes you
+  // 2. premium - typical app sub - for a month, or 1 week. Allow control over all filter
+  // 3. gold/platinum - result oreinted, within a specific time frame e.g 6 months, anchor, online advertisement of profile, 2-way match compatibility i.e only allow people you specify to see you and people who also sub or fill thier deets.  if matched, it gets cancelled. multiple proiles
+  // avatar instead of picture for celeb ? personalityFirst ?
+
+  @Property({ type: 'timestamptz' })
+  controlEndsAt?: Date;
+
+  @Property({ type: 'timestamptz' })
+  trueFyndEndsAt?: Date;
 }

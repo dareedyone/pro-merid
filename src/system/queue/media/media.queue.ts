@@ -38,7 +38,7 @@ export class MediaProcessor {
     return { ...context, jobId };
   }
 
-  private async handleAfterMatch(
+  private async handleAfterMath(
     job: Job<JobPayload>,
     context: MediaJobContext,
   ) {
@@ -77,7 +77,7 @@ export class MediaProcessor {
       return;
     }
 
-    await this.handleAfterMatch(job, context);
+    await this.handleAfterMath(job, context);
   }
 
   @Process(MediaJobType.VERIFY_PICTURES)
@@ -110,7 +110,7 @@ export class MediaProcessor {
       });
       await this.jobContextService.delete('media', jobId);
     }
-    await this.handleAfterMatch(job, context);
+    await this.handleAfterMath(job, context);
   }
 
   @Process(MediaJobType.UPLOAD_MEDIA)
@@ -194,6 +194,6 @@ export class MediaProcessor {
       body: 'Your media has been successfully uploaded.',
     });
 
-    await this.handleAfterMatch(job, context);
+    await this.handleAfterMath(job, context);
   }
 }

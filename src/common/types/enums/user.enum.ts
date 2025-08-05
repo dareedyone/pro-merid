@@ -258,13 +258,14 @@ export enum DateIntention {
   SERIOUS_RELATIONSHIP = 'Serious Relationship', // Long-term commitment (marriage possible)
   LIFE_PARTNERSHIP = 'Life Partnership', // Committed but not necessarily marriage
   OPEN_RELATIONSHIP = 'Open Relationship', // Ethical non-monogamy but not necessarily polyamorous
-  POLYAMORY = 'Polyamory', // Multiple ethical romantic/sexual relationships - - use text map as married and seeking another spouse todo
-  CASUAL_FUN = 'Casual/Fun', // Short-term, low-commitment, or just enjoying the moment
-  FRIENDSHIP = 'Friendship', // Seeking platonic connections - if selected tell them community is comming soon todo
+  // POLYAMORY = 'Polyamory', // Multiple ethical romantic/sexual relationships - - use text map as married and seeking another - i removed this because it can be infered
+  CASUAL_FUN = 'Casual/Fun', // Short-term, low-commitment, or just enjoying the moment, exploratory
+  // FRIENDSHIP = 'Friendship', // Seeking platonic connections - if selected tell them community is comming soon todo
   // UNDECIDED = 'Undecided', // Open but unsure
   // OTHER = 'Other', // Covers unique preferences
   UNKNOWN = 'Unknown', // Not disclosed
 }
+// for polygamous, they use current marital status and intention to determine if they are polygamous or not
 // todo: calculate based on marital status + intention e.g Married + Marriage = Polygamous
 
 export enum RelationshipBeliefType {

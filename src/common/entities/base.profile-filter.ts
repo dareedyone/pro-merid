@@ -10,26 +10,33 @@ export abstract class BaseProfileFilter extends BaseTimeEntity {
   @ManyToOne(() => User)
   user!: User;
 
-  @Embedded(() => RangeEmb)
-  age = new RangeEmb(15, 150);
+  @Embedded(() => RangeEmb, {
+    nullable: true,
+  })
+  age?: RangeEmb = new RangeEmb(18, 100);
 
   @Property({ default: false, type: 'boolean' })
   isVerified?: boolean = false;
 
-  @Embedded(() => RangeEmb)
-  smoking = new RangeEmb(-1, 7);
+  @Embedded(() => RangeEmb, {
+    nullable: true,
+  })
+  smoking?: RangeEmb = new RangeEmb(-1, 7);
 
-  @Embedded(() => RangeEmb)
-  drinking = new RangeEmb(-1, 7);
+  @Embedded(() => RangeEmb, { nullable: true })
+  drinking?: RangeEmb = new RangeEmb(-1, 7);
 
-  @Embedded(() => RangeEmb)
-  drug = new RangeEmb(-1, 7);
+  @Embedded(() => RangeEmb, { nullable: true })
+  drug?: RangeEmb = new RangeEmb(-1, 7);
 
-  @Embedded(() => RangeEmb)
-  education = new RangeEmb(-1, 10);
+  @Embedded(() => RangeEmb, { nullable: true })
+  education?: RangeEmb = new RangeEmb(-1, 10);
+
+  @Property({ type: 'int', nullable: true })
+  maxDistanceMile?: number;
 
   @Property({ type: 'text[]' })
-  maritalStatus: MaritalStatus[] = Object.values(MaritalStatus);
+  maritalStatus?: MaritalStatus[];
 
   @Property({ type: 'int[]', nullable: true })
   restrictToProfessions?: number[];
@@ -66,8 +73,8 @@ export abstract class BaseProfileFilter extends BaseTimeEntity {
   //   (item) => item !== YesNo.UNSURE,
   // );
 
-  @Embedded(() => RangeEmb)
-  hasChildren = new RangeEmb(1, 5);
+  @Embedded(() => RangeEmb, { nullable: true })
+  hasChildren?: RangeEmb = new RangeEmb(1, 5);
 
   @Property({ nullable: true })
   beliefAstronology?: boolean = false;

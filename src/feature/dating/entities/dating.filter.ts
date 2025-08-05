@@ -18,31 +18,31 @@ export class DatingFilter extends BaseProfileFilter {
   )
   locationProfile!: DatingLocationProfile;
 
-  @Embedded(() => RangeEmb)
-  heightCm = new RangeEmb(1, Infinity);
+  @Embedded(() => RangeEmb, { nullable: true })
+  heightCm?: RangeEmb = new RangeEmb(1, Infinity);
 
-  @Embedded(() => RangeEmb)
-  bodyType = new RangeEmb(-1, 7);
+  @Embedded(() => RangeEmb, { nullable: true })
+  bodyType?: RangeEmb = new RangeEmb(-1, 7);
 
   @Property({ type: 'text[]' })
-  intention: DateIntention[] = Object.values(DateIntention);
+  intention?: DateIntention[];
 
   @Property({ default: false, type: 'boolean' })
   isHeightVerified?: boolean = false;
 
-  @Embedded(() => RangeEmb)
-  religious = new RangeEmb(1, 5);
+  @Embedded(() => RangeEmb, { nullable: true })
+  religious?: RangeEmb = new RangeEmb(1, 5);
 
   @Property({ type: 'text[]' })
-  diet: DietaryPreference[] = Object.values(DietaryPreference);
+  diet?: DietaryPreference[];
 
   // @Property({ type: 'text[]' })
   // hasChildren: YesNo[] = Object.values(YesNo).filter(
   //   (item) => item !== YesNo.UNSURE,
   // );
 
-  @Embedded(() => RangeEmb)
-  wantChildren = new RangeEmb(1, 5);
+  @Embedded(() => RangeEmb, { nullable: true })
+  wantChildren?: RangeEmb = new RangeEmb(1, 5);
 
   // @Property({ type: 'text[]' })
   // wantChildren: YesNo[] = Object.values(YesNo);
@@ -50,74 +50,74 @@ export class DatingFilter extends BaseProfileFilter {
   // biological
 
   @Property({ type: 'text[]' })
-  hasSickleCellTrait: YesNo[] = Object.values(YesNo);
+  hasSickleCellTrait?: YesNo[];
 
   @Property({ type: 'text[]' })
-  hasThalassemiaTrait: YesNo[] = Object.values(YesNo);
+  hasThalassemiaTrait?: YesNo[];
 
   @Property({ type: 'text[]' })
-  hasRhesusFactor: RhFactor[] = Object.values(RhFactor);
+  hasRhesusFactor?: RhFactor[];
 
   @Property({ type: 'text[]' })
-  hasTaySachsTrait: YesNo[] = Object.values(YesNo);
+  hasTaySachsTrait?: YesNo[];
 
   @Property({ type: 'text[]' })
-  hasCysticFibrosisTrait: YesNo[] = Object.values(YesNo);
+  hasCysticFibrosisTrait?: YesNo[];
 
   @Property({ type: 'text[]' })
-  hasG6pdDeficiency: YesNo[] = Object.values(YesNo);
+  hasG6pdDeficiency?: YesNo[];
 
   // personality
 
-  @Embedded(() => RangeEmb)
-  financialAttitude = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  financialAttitude?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  honesty = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  honesty?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  kindness = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  kindness?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  generousity = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  generousity?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  upright = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  upright?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  political = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  political?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  dressSense = new RangeEmb(-1, 6);
+  @Embedded(() => RangeEmb, { nullable: true })
+  dressSense?: RangeEmb = new RangeEmb(-1, 6);
 
   // relationship
 
-  @Embedded(() => RangeEmb)
-  relationshipBelief = new RangeEmb(-1, 5);
+  @Embedded(() => RangeEmb, { nullable: true })
+  relationshipBelief?: RangeEmb = new RangeEmb(-1, 5);
 
-  @Embedded(() => RangeEmb)
-  intimacyBelief = new RangeEmb(-1, 3);
+  @Embedded(() => RangeEmb, { nullable: true })
+  intimacyBelief?: RangeEmb = new RangeEmb(-1, 3);
 
   @Property({ type: 'jsonb', nullable: true })
-  feelLoveLanguage!: Partial<Record<LoveLanguageType, number>>;
+  feelLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
 
-  @Embedded(() => RangeEmb)
-  parentingStyle = new RangeEmb(-1, 4);
+  @Embedded(() => RangeEmb, { nullable: true })
+  parentingStyle?: RangeEmb = new RangeEmb(-1, 4);
 
-  @Embedded(() => RangeEmb)
-  spouseFriendship = new RangeEmb(-1, 3);
+  @Embedded(() => RangeEmb, { nullable: true })
+  spouseFriendship?: RangeEmb = new RangeEmb(-1, 3);
 
   @Enum({
     items: () => MaritalTimelineType,
     default: MaritalTimelineType.PREFER_NOT_TO_SAY,
   })
-  maritalTimeline: MaritalTimelineType;
+  maritalTimeline?: MaritalTimelineType;
 
   @Property({ type: 'text[]' })
-  relocateForMarriage: YesNo[] = Object.values(YesNo);
+  relocateForMarriage?: YesNo[];
 
   @Property({ default: false })
-  personalityFirst: boolean = false;
+  personalityFirst?: boolean;
 
   // note: didn't add gender filter or sexual orientation because that should be dynmically calculated based on user's profile - free or paid
 }

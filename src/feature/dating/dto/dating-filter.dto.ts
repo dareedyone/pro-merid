@@ -17,8 +17,9 @@ import {
 } from 'src/common/types/enums/user.enum';
 import { RhFactor, YesNo } from 'src/common/types/enums/other.enum';
 import { PartialType } from '@nestjs/mapped-types';
+import { BaseProfileFilterDto } from 'src/common/dtos/base-profile-filter.dto';
 
-export class CreateDatingFilterDto {
+export class CreateDatingFilterDto extends BaseProfileFilterDto {
   @ValidateNested()
   @Type(() => RangeEmbDto)
   heightCm: RangeEmbDto;
@@ -29,7 +30,7 @@ export class CreateDatingFilterDto {
 
   @IsArray()
   @IsEnum(DateIntention, { each: true })
-  intention: DateIntention[];
+  intentions: DateIntention[];
 
   @IsBoolean()
   isHeightVerified: boolean;
@@ -127,9 +128,9 @@ export class CreateDatingFilterDto {
 
   @IsBoolean()
   personalityFirst: boolean;
-
-  @IsInt()
-  locationProfileId: number;
 }
 
-export class UpdateDateFilterDto extends PartialType(CreateDatingFilterDto) {}
+export class UpdateDateFilterDto extends PartialType(CreateDatingFilterDto) {
+  @IsInt()
+  locationProfileId: string;
+}
