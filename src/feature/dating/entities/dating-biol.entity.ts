@@ -1,6 +1,6 @@
-import { Entity, PrimaryKey, Property, OneToOne, Enum } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, OneToOne } from '@mikro-orm/core';
 import { BodyType } from 'src/common/types/enums/user.enum';
-import { Genotype, RhFactor, YesNo } from 'src/common/types/enums/other.enum';
+import { RhFactor } from 'src/common/types/enums/other.enum';
 import { DatingProfile } from './dating.profile';
 
 @Entity()
@@ -17,19 +17,24 @@ export class DatingBiol {
   @Property({ nullable: true })
   measuredHeightCm?: number;
 
-  @Enum({ items: () => BodyType, default: BodyType.UNKNOWN })
-  bodyType: BodyType;
+  @Property({ nullable: true, default: BodyType.UNKNOWN })
+  bodyType?: BodyType;
 
   // todo: ask based on origin and location
 
   // "Do you carry the sickle cell trait?"
   // If UNKNOWN_BUT_KNOW_GENOTYPE (reveals dropdown)
 
-  @Enum({ items: () => Genotype, nullable: true })
-  sickleCellGenotype?: Genotype;
+  // note: we are removing this bc we want to make client calculate this and only send hasSickleCellTrait
+  // @Property({ nullable: true })
+  // sickleCellGenotype?: Genotype;
 
-  @Enum({ items: () => YesNo, default: YesNo.UNSURE })
-  sickleCellTrait: YesNo;
+  @Property({ nullable: true })
+  sickleCellTrait?: boolean;
+
+  @Property({ nullable: true })
+  sickleCellDisease?: boolean;
+
   //   🔹 Who is most affected?
   // •	Black/African descent (West & Central Africa, Caribbean)
   // •	Mediterranean (Greece, Italy)
@@ -38,8 +43,9 @@ export class DatingBiol {
   //   ✅ Conditional Question Trigger
   // If user selects Black, African, Caribbean, Mediterranean, Middle Eastern, or South Asian as their ethnicity,
 
-  @Enum({ items: () => YesNo, default: YesNo.UNSURE })
-  thalassemiaTrait: YesNo;
+  @Property({ nullable: true })
+  thalassemiaTrait?: boolean;
+
   //   🔹 Who is most affected?
   // •	South Asians (India, Pakistan, Bangladesh)
   // •	Mediterranean (Greek, Italian)
@@ -48,21 +54,21 @@ export class DatingBiol {
   // If user selects South Asian, Mediterranean, or Middle Eastern, then ask:
   // "Do you carry the thalassemia trait?"
 
-  @Enum({ items: () => RhFactor, default: RhFactor.UNSURE })
-  rhesusFactor: RhFactor;
+  @Property({ nullable: true })
+  rhesusFactor?: RhFactor;
   //   🔹 Who is most affected?
   // •	Women (people) of all ethnicities (but mostly relevant for those planning to have children)
   //   ✅ Conditional Question Trigger
   // Need to ask for all users planning to have children for compatibility logic
   // "Do you know your Rh factor (blood type +/–)?"
-  @Enum({ items: () => YesNo, default: YesNo.UNSURE })
-  taySachsTrait: YesNo; // Triggered for Ashkenazi Jewish/French Canadian
+  @Property({ nullable: true })
+  taySachsTrait?: boolean; // Triggered for Ashkenazi Jewish/French Canadian
   // "Do you carry the Tay-Sachs trait?"
 
-  @Enum({ items: () => YesNo, default: YesNo.UNSURE })
-  cysticFibrosisTrait: YesNo; // Triggered for European descent
+  @Property({ nullable: true })
+  cysticFibrosisTrait?: boolean; // Triggered for European descent
   // "Do you carry the CFTR gene?"
 
-  @Enum({ items: () => YesNo, default: YesNo.UNSURE })
-  g6pdDeficiency: YesNo; //  African/Mediterranean/Middle Eastern
+  @Property({ nullable: true })
+  g6pdDeficiency?: boolean; //  African/Mediterranean/Middle Eastern
 }

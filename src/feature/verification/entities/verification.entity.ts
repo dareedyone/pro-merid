@@ -12,7 +12,7 @@ export class Verification extends BaseTimeEntity {
   @ManyToOne(() => User)
   user!: User;
 
-  @Enum({
+  @Property({
     items: () => VerificationType,
     default: VerificationType.OTHER,
   })
@@ -21,7 +21,7 @@ export class Verification extends BaseTimeEntity {
   @Property({ type: 'json', nullable: true })
   data?: Record<string, any>;
 
-  @Enum({
+  @Property({
     items: () => VerificationStatus,
     default: VerificationStatus.PENDING,
   })

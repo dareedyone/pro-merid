@@ -1,4 +1,4 @@
-import { Entity, PrimaryKey, OneToOne, Enum } from '@mikro-orm/core';
+import { Entity, PrimaryKey, OneToOne, Property } from '@mikro-orm/core';
 import {
   DressSenseMen,
   DressSenseWomen,
@@ -7,7 +7,6 @@ import {
   HonestyType,
   KindnessType,
   PoliticialView,
-  PrimaryGuidePhilosophy,
   UprightnessType,
 } from 'src/common/types/enums/user.enum';
 import { DatingProfile } from './dating.profile';
@@ -20,48 +19,27 @@ export class DatingPersonality {
   @OneToOne(() => DatingProfile, (datingProfile) => datingProfile.personality)
   datingProfile!: DatingProfile;
 
-  @Enum({
-    items: () => FinancialAttitudeType,
-    default: FinancialAttitudeType.PREFER_NOT_TO_SAY,
-  })
-  financialAttitude: FinancialAttitudeType;
+  @Property({ nullable: true })
+  financialAttitude?: FinancialAttitudeType;
 
-  @Enum({ items: () => HonestyType, default: HonestyType.PREFER_NOT_TO_SAY })
-  honestLevel: HonestyType;
+  @Property({ nullable: true })
+  honesty?: HonestyType;
 
-  @Enum({ items: () => KindnessType, default: KindnessType.PREFER_NOT_TO_SAY })
-  kindessLevel: KindnessType;
+  @Property({ nullable: true })
+  kindess?: KindnessType;
 
-  @Enum({ items: () => GenerousType, default: GenerousType.PREFER_NOT_TO_SAY })
-  generousityLevel: GenerousType;
+  @Property({ nullable: true })
+  generousity?: GenerousType;
 
-  @Enum({
-    items: () => UprightnessType,
-    default: UprightnessType.PREFER_NOT_TO_SAY,
-  })
-  uprightLevel: UprightnessType;
+  @Property({ nullable: true })
+  uprightness?: UprightnessType;
 
-  @Enum({
-    items: () => PoliticialView,
-    default: PoliticialView.PREFER_NOT_TO_SAY,
-  })
-  politicalView: PoliticialView;
+  @Property({ nullable: true })
+  politicalView?: PoliticialView;
 
-  @Enum({
-    items: () => DressSenseWomen,
-    default: DressSenseMen.PREFER_NOT_TO_SAY,
-  })
+  @Property({ nullable: true })
   dressSenseWomen?: DressSenseWomen;
 
-  @Enum({
-    items: () => DressSenseMen,
-    default: UprightnessType.PREFER_NOT_TO_SAY,
-  })
+  @Property({ nullable: true })
   dressSenseMen?: DressSenseMen;
-
-  @Enum({
-    items: () => PrimaryGuidePhilosophy,
-    default: PrimaryGuidePhilosophy.PREFER_NOT_TO_SAY,
-  })
-  primaryGuidePhilosophy?: PrimaryGuidePhilosophy;
 }

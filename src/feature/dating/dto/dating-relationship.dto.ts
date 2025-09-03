@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsEnum, IsObject, IsOptional, ValidateNested } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, ValidateNested } from 'class-validator';
 import { Type as TransformType } from 'class-transformer';
 import { RangeEmbDto } from 'src/common/dtos/range-emb-.dto';
 import { YesNo } from 'src/common/types/enums/other.enum';
@@ -10,6 +10,7 @@ import {
   ParentingStyleType,
   SpouseFriendshipType,
   MaritalTimelineType,
+  RelocateForMarriage,
 } from 'src/common/types/enums/user.enum';
 
 export class CreateDatingRelationshipDto {
@@ -20,8 +21,9 @@ export class CreateDatingRelationshipDto {
   intimacyBelief: IntimacyBeliefType;
 
   @IsOptional()
-  @IsObject()
-  expressLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
+  @IsArray()
+  @IsEnum(LoveLanguageType, { each: true })
+  loveLanguage: LoveLanguageType[];
 
   @IsEnum(ParentingStyleType)
   parentingStyle: ParentingStyleType;
@@ -35,8 +37,8 @@ export class CreateDatingRelationshipDto {
   @IsEnum(YesNo)
   astronology: YesNo;
 
-  @IsEnum(YesNo)
-  relocateForMarriage: YesNo;
+  @IsEnum(RelocateForMarriage)
+  relocateForMarriage: RelocateForMarriage;
 
   @ValidateNested()
   @IsOptional()

@@ -9,7 +9,6 @@ import {
   PoliticialView,
   DressSenseWomen,
   DressSenseMen,
-  PrimaryGuidePhilosophy,
 } from 'src/common/types/enums/user.enum';
 
 export class CreateDatingPersonalityDto {
@@ -17,16 +16,16 @@ export class CreateDatingPersonalityDto {
   financialAttitude: FinancialAttitudeType;
 
   @IsEnum(HonestyType)
-  honestLevel: HonestyType;
+  honesty: HonestyType;
 
   @IsEnum(KindnessType)
-  kindessLevel: KindnessType;
+  kindess: KindnessType;
 
   @IsEnum(GenerousType)
-  generousityLevel: GenerousType;
+  generousity: GenerousType;
 
   @IsEnum(UprightnessType)
-  uprightLevel: UprightnessType;
+  uprightness: UprightnessType;
 
   @IsEnum(PoliticialView)
   politicalView: PoliticialView;
@@ -38,10 +37,6 @@ export class CreateDatingPersonalityDto {
   @IsOptional()
   @IsEnum(DressSenseMen)
   dressSenseMen?: DressSenseMen;
-
-  @IsOptional()
-  @IsEnum(PrimaryGuidePhilosophy)
-  primaryGuidePhilosophy?: PrimaryGuidePhilosophy;
 }
 
 export class UpdateDatingPersonalityDto extends PartialType(

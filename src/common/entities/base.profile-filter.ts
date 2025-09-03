@@ -1,5 +1,9 @@
 import { Entity, Property, ManyToOne, Embedded } from '@mikro-orm/core';
-import { MaritalStatus } from 'src/common/types/enums/user.enum';
+import {
+  Gender,
+  MaritalStatus,
+  PrimaryGuidePhilosophy,
+} from 'src/common/types/enums/user.enum';
 // import { YesNo } from 'src/types/enums/other.enum';
 import { BaseTimeEntity } from './base.entity';
 import { RangeEmb } from './range.emb';
@@ -15,25 +19,14 @@ export abstract class BaseProfileFilter extends BaseTimeEntity {
   })
   age?: RangeEmb = new RangeEmb(18, 100);
 
-  @Property({ default: false, type: 'boolean' })
-  isVerified?: boolean = false;
+  @Property({ type: 'text[]' })
+  primaryGuidePhilosophy?: PrimaryGuidePhilosophy[];
 
   @Embedded(() => RangeEmb, {
     nullable: true,
   })
-  smoking?: RangeEmb = new RangeEmb(-1, 7);
-
-  @Embedded(() => RangeEmb, { nullable: true })
-  drinking?: RangeEmb = new RangeEmb(-1, 7);
-
-  @Embedded(() => RangeEmb, { nullable: true })
-  drug?: RangeEmb = new RangeEmb(-1, 7);
-
   @Embedded(() => RangeEmb, { nullable: true })
   education?: RangeEmb = new RangeEmb(-1, 10);
-
-  @Property({ type: 'int', nullable: true })
-  maxDistanceMile?: number;
 
   @Property({ type: 'text[]' })
   maritalStatus?: MaritalStatus[];
@@ -46,12 +39,18 @@ export abstract class BaseProfileFilter extends BaseTimeEntity {
 
   @Property({ type: 'int[]', nullable: true })
   originCountries?: number[];
+  // ancentral
 
   @Property({ type: 'int[]', nullable: true })
   grewupCountries?: number[];
+  // spent most childhood and formative years
 
   @Property({ type: 'int[]', nullable: true })
-  nationalitiesOf?: number[]; // move country and thnic to base drd todo
+  nationalitiesOf?: number[];
+  //legal citizenship
+
+  @Property({ type: 'int[]', nullable: true })
+  basedInCountries?: number[];
 
   @Property({ type: 'int[]', nullable: true })
   ethniticities?: number[];
@@ -65,6 +64,9 @@ export abstract class BaseProfileFilter extends BaseTimeEntity {
   @Property({ type: 'int[]', nullable: true })
   religionsSects?: number[];
 
+  @Embedded(() => RangeEmb, { nullable: true })
+  religiousLevel?: RangeEmb = new RangeEmb(1, 5);
+
   @Property({ type: 'int[]', nullable: true })
   interests?: number[];
 
@@ -73,13 +75,36 @@ export abstract class BaseProfileFilter extends BaseTimeEntity {
   //   (item) => item !== YesNo.UNSURE,
   // );
 
+  @Property({ type: 'text[]', nullable: true })
+  gendersInterestedIn?: Gender[];
+
   @Embedded(() => RangeEmb, { nullable: true })
   hasChildren?: RangeEmb = new RangeEmb(1, 5);
 
+  smoking?: RangeEmb = new RangeEmb(-1, 7);
+
+  @Embedded(() => RangeEmb, { nullable: true })
+  drinking?: RangeEmb = new RangeEmb(-1, 7);
+
+  @Embedded(() => RangeEmb, { nullable: true })
+  drug?: RangeEmb = new RangeEmb(-1, 7);
+
+  @Property({ type: 'int', nullable: true })
+  maxDistanceMile?: number;
+
+  @Property({ default: false, type: 'boolean' })
+  isFaceVerified?: boolean = false;
+
+  @Property({ default: false, type: 'boolean' })
+  isIdVerified?: boolean = false;
+
   @Property({ nullable: true })
-  beliefAstronology?: boolean = false;
+  excludeAstroBelievers?: boolean = false;
 
   @Property({ nullable: true })
   useAstronology?: boolean = false;
   // note: it is nullable because of unpaid user - it won't be used. If paid user false or true would be meaningful. e.g for who doesn't believe in it, it would be false
+
+  @Property({ nullable: true, default: false, type: 'boolean' })
+  onlyBeSeenByCompatible?: boolean = false;
 }

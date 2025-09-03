@@ -25,10 +25,10 @@ export class GoogleAuthService {
 
     let ticket: LoginTicket;
     try {
-      ticket = (await this.client.verifyIdToken({
+      ticket = await this.client.verifyIdToken({
         idToken,
         audience: clientId,
-      })) as LoginTicket;
+      });
     } catch {
       throw new UnauthorizedException('Failed to verify Google ID token');
     }

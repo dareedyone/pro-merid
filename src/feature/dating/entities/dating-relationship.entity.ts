@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryKey,
   OneToOne,
-  Enum,
   Property,
   Embedded,
 } from '@mikro-orm/core';
@@ -12,9 +11,9 @@ import {
   MaritalTimelineType,
   ParentingStyleType,
   RelationshipBeliefType,
+  RelocateForMarriage,
   SpouseFriendshipType,
 } from 'src/common/types/enums/user.enum';
-import { YesNo } from 'src/common/types/enums/other.enum';
 import { RangeEmb } from 'src/common/entities/range.emb';
 import { DatingProfile } from './dating.profile';
 
@@ -26,55 +25,43 @@ export class DatingRelationship {
   @OneToOne(() => DatingProfile, (datingProfile) => datingProfile.personality)
   datingProfile!: DatingProfile;
 
-  @Enum({
-    items: () => RelationshipBeliefType,
-    default: RelationshipBeliefType.PREFER_NOT_TO_SAY,
+  @Property({
+    nullable: true,
   })
-  belief: RelationshipBeliefType;
+  belief?: RelationshipBeliefType;
 
-  @Enum({
-    items: () => IntimacyBeliefType,
-    default: IntimacyBeliefType.PREFER_NOT_TO_SAY,
+  @Property({
+    nullable: true,
   })
-  intimacyBelief: IntimacyBeliefType;
+  intimacyBelief?: IntimacyBeliefType;
 
-  @Property({ type: 'jsonb', nullable: true })
-  expressLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
+  @Property({ type: 'text[]', nullable: true })
+  loveLanguage?: LoveLanguageType[];
 
-  @Enum({
-    items: () => ParentingStyleType,
-    default: ParentingStyleType.PREFER_NOT_TO_SAY,
+  @Property({
+    nullable: true,
   })
-  parentingStyle: ParentingStyleType;
+  parentingStyle?: ParentingStyleType;
 
-  @Enum({
-    items: () => SpouseFriendshipType,
-    default: SpouseFriendshipType.PREFER_NOT_TO_SAY,
+  @Property({
+    nullable: true,
   })
-  spouseFriendship: SpouseFriendshipType;
+  spouseFriendship?: SpouseFriendshipType;
 
-  @Enum({
-    items: () => MaritalTimelineType,
-    default: MaritalTimelineType.PREFER_NOT_TO_SAY,
+  @Property({
+    nullable: true,
   })
-  maritalTimeline: MaritalTimelineType;
-
-  @Enum({
-    items: () => YesNo,
-    default: YesNo.UNSURE,
-  })
-  astronology: YesNo;
+  maritalTimeline?: MaritalTimelineType;
 
   @Embedded(() => RangeEmb, { nullable: true })
   wantChildren?: RangeEmb;
 
   // note: only use it to display the user sign for everyone, but in addition to that for paid use in filtering
 
-  @Enum({
-    items: () => YesNo,
-    default: YesNo.UNSURE,
+  @Property({
+    nullable: true,
   })
-  relocateForMarriage: YesNo;
+  relocateForMarriage?: RelocateForMarriage;
 }
 // DRD BIG TODO
 // prompts later - AI ?

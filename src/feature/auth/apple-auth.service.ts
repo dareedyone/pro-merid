@@ -25,7 +25,7 @@ export class AppleAuthService {
   }
 
   private getKey(header: JwtHeader, callback: SigningKeyCallback) {
-    this.client.getSigningKey(header.kid!, (err, key) => {
+    this.client.getSigningKey(header.kid, (err, key) => {
       if (err) return callback(err, undefined);
 
       const signingKey = key?.getPublicKey();

@@ -27,7 +27,7 @@ export class Media {
   @Property()
   url!: string;
 
-  // @Enum(() => FileType)
+  // @Property(() => FileType)
   // fileType: FileType;
 
   @Property()

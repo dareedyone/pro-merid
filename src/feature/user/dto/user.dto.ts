@@ -19,6 +19,7 @@ import {
   Gender,
   MaritalStatus,
   PetPreference,
+  PrimaryGuidePhilosophy,
   ReligiousLevel,
   SexualOrientation,
   SubstanceStatus,
@@ -127,6 +128,9 @@ export class CreateUserDto {
   @IsOptional()
   interestIds?: number[];
 
+  @IsEnum(PrimaryGuidePhilosophy)
+  primaryGuidePhilosophy: PrimaryGuidePhilosophy;
+
   // @IsOptional()
   // @IsBoolean()
   // faceVerified?: boolean;
@@ -139,6 +143,10 @@ export class CreateUserDto {
 
   @IsEnum(SubstanceStatus)
   drugUseStatus: SubstanceStatus;
+
+  @IsOptional()
+  @IsBoolean()
+  beliefAstronology?: boolean;
 }
 
 export class UpdateUserDto extends PartialType(

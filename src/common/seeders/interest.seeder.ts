@@ -1,4 +1,4 @@
-import { EntityManager } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import { InterestCategory } from '../entity/user/character/interest-category.entity';
 import { Interest } from '../entity/user/character/interest.entity';

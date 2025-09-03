@@ -9,7 +9,7 @@ import { User } from '../user/user.entity';
 
 @Entity()
 export class ProfileMatch extends BaseTimeEntity {
-  @Enum(() => ProfileInteractionType)
+  @Property(() => ProfileInteractionType)
   profileType!: ProfileType;
 
   @ManyToOne(() => User)

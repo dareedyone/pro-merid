@@ -36,8 +36,8 @@
 // ];
 
 // src/database/mikroorm.config.ts
-import { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
-import { ConfigService } from '@nestjs/config';
+import type { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
+import type { ConfigService } from '@nestjs/config';
 import { User } from '../../feature/user/entities/user/user.entity';
 import { Auth } from 'src/feature/auth/entities/auth.entity';
 

@@ -28,10 +28,7 @@ export class Auth extends BaseTimeEntity {
   @Property()
   lastCodeSentAt?: Date;
 
-  @Enum({
-    items: () => UserType,
-    default: UserType.USER,
-  })
+  @Property({ type: 'text' })
   role?: UserType;
 
   @Property({ nullable: true })

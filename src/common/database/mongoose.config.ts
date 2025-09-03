@@ -5,9 +5,9 @@
 // };
 
 // src/database/mongoose.config.ts
-import { MongooseModuleOptions } from '@nestjs/mongoose';
-import { ConfigService } from '@nestjs/config';
-import { Connection } from 'mongoose';
+import type { MongooseModuleOptions } from '@nestjs/mongoose';
+import type { ConfigService } from '@nestjs/config';
+import type { Connection } from 'mongoose';
 
 export const mongooseConfigFactory = (
   configService: ConfigService,

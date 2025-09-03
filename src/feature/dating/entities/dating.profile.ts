@@ -1,6 +1,5 @@
 import {
   Entity,
-  Enum,
   OneToOne,
   Cascade,
   Collection,
@@ -20,14 +19,19 @@ export class DatingProfile extends BaseTimeEntity {
   @OneToOne(() => User, (user) => user.datingProfile, { unique: true })
   user!: User;
 
-  @Enum({
-    items: () => DateIntention,
+  @Property({
     default: DateIntention.UNKNOWN,
   })
   intention!: DateIntention;
 
-  @Enum({ items: () => Gender, array: true, default: [] })
-  interestedIn!: Gender[];
+  // note: this is set here as opposed to filter because filter is associated with location profile
+
+  @Property({ type: 'string[]', default: [] })
+  gendersInterestedIn!: Gender[];
+
+  //note:  personality first means hide pictures, so you can find chemistry - might not use
+  @Property({ default: false, nullable: true })
+  personalityFirst?: boolean;
 
   @OneToOne(
     () => DatingPersonality,

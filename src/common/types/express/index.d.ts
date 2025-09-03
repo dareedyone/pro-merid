@@ -1,4 +1,4 @@
-import { UserType } from 'src/common/types/enums/user.enum';
+import type { UserType } from 'src/common/types/enums/user.enum';
 
 declare global {
   namespace Express {

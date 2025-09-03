@@ -1,4 +1,4 @@
-import { EntityManager } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import { ContinentSeeder } from './location/continent.seeder';
 import { CountrySeeder } from './location/country.seeder';

@@ -1,4 +1,4 @@
-import { IsEnum, IsArray } from 'class-validator';
+import { IsEnum, IsArray, IsBoolean, IsOptional } from 'class-validator';
 import { DateIntention, Gender } from 'src/common/types/enums/user.enum';
 import { PartialType } from '@nestjs/mapped-types';
 
@@ -8,7 +8,11 @@ export class CreateDatingProfileDto {
 
   @IsArray()
   @IsEnum(Gender, { each: true })
-  interestedIn: Gender[];
+  gendersInterestedIn: Gender[];
+
+  @IsOptional()
+  @IsBoolean()
+  personalityFirst?: boolean;
 }
 
 export class UpdateDatingProfileDto extends PartialType(

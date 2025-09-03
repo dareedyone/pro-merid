@@ -1,7 +1,7 @@
-import { EntityManager } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { Religion } from '../entity/user/character/religion.entity';
-import { ReligionSect } from '../entity/user/character/religion-sect.entity';
+import { ReligionSect } from 'src/feature/user/entities/user/character/religion-sect.entity';
+import { Religion } from 'src/feature/user/entities/user/character/religion.entity';
 
 export class ReligionSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {

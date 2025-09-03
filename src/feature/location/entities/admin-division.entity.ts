@@ -20,7 +20,10 @@ export class AdministrativeDivision extends BaseSingleEntity {
   @Property({ columnType: 'geometry(Point, 4326)', nullable: true })
   centroidCoordinates?: object; // GeoJSON Point
 
-  @Enum({ items: () => AdminDivisionType, default: AdminDivisionType.STATE })
+  @Property({
+    items: () => AdminDivisionType,
+    default: AdminDivisionType.STATE,
+  })
   type!: AdminDivisionType;
 
   @ManyToOne(() => Country)

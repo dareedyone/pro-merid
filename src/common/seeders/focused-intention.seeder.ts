@@ -1,4 +1,4 @@
-import { EntityManager } from '@mikro-orm/core';
+import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import { FocusedIntention } from '../entity/user/character/focused-intention.entity';
 

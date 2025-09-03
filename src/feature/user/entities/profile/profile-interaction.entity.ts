@@ -8,10 +8,10 @@ import { User } from '../user/user.entity';
 
 @Entity()
 export class ProfileInteraction extends BaseTimeEntity {
-  @Enum(() => ProfileInteractionType)
+  @Property(() => ProfileInteractionType)
   type!: ProfileInteractionType;
 
-  @Enum(() => ProfileInteractionType)
+  @Property(() => ProfileInteractionType)
   profileType!: ProfileType;
 
   @ManyToOne(() => User)

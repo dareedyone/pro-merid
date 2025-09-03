@@ -161,13 +161,15 @@ export enum UprightnessType {
   FLEXIBLE_ETHICIST = 3, // Has morals but bends rules when necessary
   OPPORTUNIST = 4, // Prioritizes personal gain over strict ethics
 }
-
+// “Which of these best reflects your guiding priority in life and relationships?”
+// (This sets your experience and shows on your profile. You can change it anytime.)
 export enum PrimaryGuidePhilosophy {
-  PREFER_NOT_TO_SAY = -1, // Neutral option (default)
-  RELIGION = 1, // beliefs and spiritual values come first
-  HUMANITY = 2, // Compassion and human well-being guide me most
-  BALANCED = 3,
-  OTHER = 4, // todo: people soubmit and we update. We need an update for submission
+  RELIGION = 'religion', // Religion and shared beliefs
+  CULTURE = 'culture', // Culture and heritage
+  HUMANITY = 'humanity', // Humanity first - Compassion and human well-being
+  BALANCED = 'balanced', // Balanced approach - Harmony and diversity - open to all
+  PREFER_NOT_TO_SAY = 'prefer_not_to_say',
+  OTHER = 'other', // todo: people soubmit and we update. We need an update for submission
 }
 
 export enum PoliticialView {
@@ -376,6 +378,7 @@ export const ReligiousLevelText: Record<ReligiousLevel, string> = {
 };
 
 export enum DietaryPreference {
+  OMNIVORE = 'Omnivore',
   // Tier 1: Strict Dealbreakers (Religious & Ethical)
   VEGAN = 'Vegan', // 🌱 Completely plant-based; no meat, dairy, eggs, or honey. Often an ethical choice.
   HALAL = 'Halal', // 🕌 Follows Islamic dietary laws; no pork or alcohol, and only Halal-certified meat.
@@ -401,11 +404,19 @@ export enum LocationType {
 }
 
 export enum PetPreference {
-  DOGS_ONLY = 'DOGS_ONLY',
-  CATS_ONLY = 'CATS_ONLY',
-  ALL_PETS = 'ALL_PETS',
-  NO_PETS = 'NO_PETS',
-  NONE = 'NONE',
+  DOGS_ONLY = 'dogs_only',
+  CATS_ONLY = 'cats_only',
+  ALL_PETS = 'all_pets',
+  NO_PETS = 'no_pets',
+  NONE = 'none',
+}
+
+export enum RelocateForMarriage {
+  NO = 'no',
+  YES = 'yes',
+  ONLY_NATIONALLY = 'only_nationally',
+  ONLY_LOCALLY = 'only_locally',
+  NOT_SURE = 'not_sure',
 }
 
 export enum SpouseFriendshipType {

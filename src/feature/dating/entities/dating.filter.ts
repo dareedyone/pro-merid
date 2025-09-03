@@ -1,12 +1,12 @@
-import { Entity, Property, OneToOne, Enum, Embedded } from '@mikro-orm/core';
+import { Entity, Property, OneToOne, Embedded } from '@mikro-orm/core';
 import { DatingLocationProfile } from './dating-location.profile';
 import {
   DietaryPreference,
-  LoveLanguageType,
-  MaritalTimelineType,
+  // LoveLanguageType,
   DateIntention,
+  RelocateForMarriage,
 } from 'src/common/types/enums/user.enum';
-import { RhFactor, YesNo } from 'src/common/types/enums/other.enum';
+import { RhFactor } from 'src/common/types/enums/other.enum';
 import { BaseProfileFilter } from 'src/common/entities/base.profile-filter';
 import { RangeEmb } from 'src/common/entities/range.emb';
 
@@ -25,13 +25,10 @@ export class DatingFilter extends BaseProfileFilter {
   bodyType?: RangeEmb = new RangeEmb(-1, 7);
 
   @Property({ type: 'text[]' })
-  intention?: DateIntention[];
+  intentions?: DateIntention[];
 
   @Property({ default: false, type: 'boolean' })
   isHeightVerified?: boolean = false;
-
-  @Embedded(() => RangeEmb, { nullable: true })
-  religious?: RangeEmb = new RangeEmb(1, 5);
 
   @Property({ type: 'text[]' })
   diet?: DietaryPreference[];
@@ -41,31 +38,31 @@ export class DatingFilter extends BaseProfileFilter {
   //   (item) => item !== YesNo.UNSURE,
   // );
 
-  @Embedded(() => RangeEmb, { nullable: true })
-  wantChildren?: RangeEmb = new RangeEmb(1, 5);
-
   // @Property({ type: 'text[]' })
   // wantChildren: YesNo[] = Object.values(YesNo);
 
   // biological
 
-  @Property({ type: 'text[]' })
-  hasSickleCellTrait?: YesNo[];
+  @Property({ default: false })
+  excludeSickleCellTrait?: boolean;
 
-  @Property({ type: 'text[]' })
-  hasThalassemiaTrait?: YesNo[];
+  @Property({ default: false })
+  excludeSickleCellDisease?: boolean;
 
-  @Property({ type: 'text[]' })
-  hasRhesusFactor?: RhFactor[];
+  @Property({ default: false })
+  excludeThalassemiaTrait?: boolean;
 
-  @Property({ type: 'text[]' })
-  hasTaySachsTrait?: YesNo[];
+  @Property()
+  rhesusFactorIs?: RhFactor;
 
-  @Property({ type: 'text[]' })
-  hasCysticFibrosisTrait?: YesNo[];
+  @Property({ default: false })
+  excludeTaySachsTrait?: boolean;
 
-  @Property({ type: 'text[]' })
-  hasG6pdDeficiency?: YesNo[];
+  @Property({ default: false })
+  excludeCysticFibrosisTrait?: boolean;
+
+  @Property({ default: false })
+  excludeG6pdDeficiency?: boolean;
 
   // personality
 
@@ -82,10 +79,10 @@ export class DatingFilter extends BaseProfileFilter {
   generousity?: RangeEmb = new RangeEmb(-1, 4);
 
   @Embedded(() => RangeEmb, { nullable: true })
-  upright?: RangeEmb = new RangeEmb(-1, 4);
+  uprightness?: RangeEmb = new RangeEmb(-1, 4);
 
   @Embedded(() => RangeEmb, { nullable: true })
-  political?: RangeEmb = new RangeEmb(-1, 4);
+  politicalView?: RangeEmb = new RangeEmb(-1, 4);
 
   @Embedded(() => RangeEmb, { nullable: true })
   dressSense?: RangeEmb = new RangeEmb(-1, 6);
@@ -98,8 +95,8 @@ export class DatingFilter extends BaseProfileFilter {
   @Embedded(() => RangeEmb, { nullable: true })
   intimacyBelief?: RangeEmb = new RangeEmb(-1, 3);
 
-  @Property({ type: 'jsonb', nullable: true })
-  feelLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
+  // @Property({ type: 'jsonb', nullable: true })
+  // feelLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
 
   @Embedded(() => RangeEmb, { nullable: true })
   parentingStyle?: RangeEmb = new RangeEmb(-1, 4);
@@ -107,17 +104,14 @@ export class DatingFilter extends BaseProfileFilter {
   @Embedded(() => RangeEmb, { nullable: true })
   spouseFriendship?: RangeEmb = new RangeEmb(-1, 3);
 
-  @Enum({
-    items: () => MaritalTimelineType,
-    default: MaritalTimelineType.PREFER_NOT_TO_SAY,
-  })
-  maritalTimeline?: MaritalTimelineType;
+  @Embedded(() => RangeEmb, { nullable: true })
+  wantChildren?: RangeEmb = new RangeEmb(1, 5);
+
+  @Embedded(() => RangeEmb, { nullable: true })
+  maritalTimeline?: RangeEmb = new RangeEmb(-1, 4);
 
   @Property({ type: 'text[]' })
-  relocateForMarriage?: YesNo[];
-
-  @Property({ default: false })
-  personalityFirst?: boolean;
+  relocateForMarriage?: RelocateForMarriage[];
 
   // note: didn't add gender filter or sexual orientation because that should be dynmically calculated based on user's profile - free or paid
 }

@@ -5,8 +5,13 @@ import { LocationType } from 'src/common/types/enums/user.enum';
 import { Country } from 'src/feature/location/entities/country.entity';
 // import { AdministrativeDivision } from 'src/feature/location/entities/admin-division.entity';
 
+export interface GeoPoint {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+}
+
 export abstract class BaseLocationProfileEntity extends BaseTimeEntity {
-  @Enum({ items: () => LocationType }) // todo: review current due to flight mode
+  @Property({ type: 'text' }) // todo: review current due to flight mode
   type: LocationType;
 
   // @ManyToOne(() => User)
@@ -16,10 +21,10 @@ export abstract class BaseLocationProfileEntity extends BaseTimeEntity {
   usePinLocation?: boolean;
 
   @Property({ columnType: 'geometry(Point, 4326)' })
-  point: object;
+  point: GeoPoint;
 
   @Property({ columnType: 'geometry(Point, 4326)', nullable: true })
-  pinnedPoint: object;
+  pinnedPoint?: GeoPoint;
 
   // @ManyToOne(() => AdministrativeDivision)
   // location: AdministrativeDivision;

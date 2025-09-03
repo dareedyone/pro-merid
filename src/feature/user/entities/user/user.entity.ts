@@ -3,7 +3,6 @@ import {
   PrimaryKey,
   Property,
   OneToOne,
-  Enum,
   DateType,
   Collection,
   ManyToOne,
@@ -21,8 +20,8 @@ import {
   Gender,
   MaritalStatus,
   PetPreference,
+  PrimaryGuidePhilosophy,
   ReligiousLevel,
-  SexualOrientation,
   SubstanceStatus,
 } from 'src/common/types/enums/user.enum';
 import { Profession } from './character/profession.entity';
@@ -69,7 +68,7 @@ export class User {
   @ManyToOne(() => Profession)
   profession?: Profession;
 
-  @Enum({ items: () => EducationLevel, default: EducationLevel.UNKNOWN })
+  @Property({ default: EducationLevel.UNKNOWN })
   educationLevel!: EducationLevel;
 
   // @ManyToOne(() => Religion)
@@ -82,7 +81,7 @@ export class User {
   @Property({ nullable: true, type: 'boolean' })
   isReligionConvert?: boolean;
 
-  @Enum({ items: () => ReligiousLevel })
+  @Property()
   religiousLevel: ReligiousLevel;
 
   @ManyToOne(() => Ethnic)
@@ -97,23 +96,21 @@ export class User {
   @ManyToMany(() => Country)
   nationalities = new Collection<Country>(this);
 
-  @Enum({ items: () => Gender, default: Gender.UNKNOWN })
+  // todo: handle nationality verifications
+
+  @Property({ type: 'json', nullable: true })
+  nationalityVerifications?: Record<string, boolean>;
+
+  @Property()
   gender!: Gender;
 
-  @Enum({ items: () => SexualOrientation, default: SexualOrientation.UNKNOWN })
-  sexualOrientation!: SexualOrientation;
+  // @Property({ items: () => SexualOrientation, default: SexualOrientation.UNKNOWN })
+  // sexualOrientation!: SexualOrientation;
 
-  // @Enum({ items: () => Gender, array: true, default: [] })
-  // interestedIn!: Gender[];
-
-  @Enum({ items: () => MaritalStatus, default: MaritalStatus.UNKNOWN })
+  @Property({ default: MaritalStatus.UNKNOWN })
   maritalStatus!: MaritalStatus;
 
-  // @Embedded(() => RangeEmb)
-  // children = new RangeEmb();
-
-  @Enum({
-    items: () => PetPreference,
+  @Property({
     default: PetPreference.NONE,
     nullable: true,
   })
@@ -122,14 +119,14 @@ export class User {
   @Property({ nullable: true })
   children?: number;
 
-  @Enum({
-    items: () => DietaryPreference,
-    default: DietaryPreference.OTHER,
-  })
-  diet!: DietaryPreference;
+  @Property({ nullable: true })
+  diet?: DietaryPreference;
 
   @ManyToMany(() => Interest)
   interests = new Collection<Interest>(this);
+
+  @Property()
+  primaryGuidePhilosophy?: PrimaryGuidePhilosophy;
 
   // @Property({ default: false, type: 'boolean' })
   // emailVerified?: boolean = false;
@@ -143,14 +140,17 @@ export class User {
   @Property({ nullable: true })
   ageVerified?: boolean = false;
 
-  @Enum({ items: () => SubstanceStatus, default: SubstanceStatus.UNKNOWN })
+  @Property({ default: SubstanceStatus.UNKNOWN })
   smokingStatus: SubstanceStatus;
 
-  @Enum({ items: () => SubstanceStatus, default: SubstanceStatus.UNKNOWN })
+  @Property({ default: SubstanceStatus.UNKNOWN })
   drinkingStatus: SubstanceStatus;
 
-  @Enum({ items: () => SubstanceStatus, default: SubstanceStatus.UNKNOWN })
+  @Property({ default: SubstanceStatus.UNKNOWN })
   drugUseStatus: SubstanceStatus;
+
+  @Property({ nullable: true })
+  beliefAstronology?: boolean = false;
 
   @Property({ default: false, nullable: true })
   isCeleb?: boolean = false;

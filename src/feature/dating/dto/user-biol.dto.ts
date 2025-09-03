@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsEnum, IsNumber, IsOptional } from 'class-validator';
-import { Genotype, YesNo, RhFactor } from 'src/common/types/enums/other.enum';
+import { RhFactor } from 'src/common/types/enums/other.enum';
 import { BodyType } from 'src/common/types/enums/user.enum';
 
 export class CreateUserBiolDto {
@@ -15,27 +15,30 @@ export class CreateUserBiolDto {
   @IsEnum(BodyType)
   bodyType: BodyType;
 
+  // @IsOptional()
+  // @IsEnum(Genotype)
+  // sickleCellGenotype?: Genotype;
+
   @IsOptional()
-  @IsEnum(Genotype)
-  sickleCellGenotype?: Genotype;
+  sickleCellTrait?: boolean;
 
-  @IsEnum(YesNo)
-  sickleCellTrait: YesNo;
+  @IsOptional()
+  sickleCellDisease?: boolean;
 
-  @IsEnum(YesNo)
-  thalassemiaTrait: YesNo;
+  @IsOptional()
+  thalassemiaTrait?: boolean;
 
-  @IsEnum(RhFactor)
-  rhesusFactor: RhFactor;
+  @IsOptional()
+  rhesusFactor?: RhFactor;
 
-  @IsEnum(YesNo)
-  taySachsTrait: YesNo;
+  @IsOptional()
+  taySachsTrait?: boolean;
 
-  @IsEnum(YesNo)
-  cysticFibrosisTrait: YesNo;
+  @IsOptional()
+  cysticFibrosisTrait?: boolean;
 
-  @IsEnum(YesNo)
-  g6pdDeficiency: YesNo;
+  @IsOptional()
+  g6pdDeficiency?: boolean;
 }
 
 export class UpdateUserBiolDto extends PartialType(CreateUserBiolDto) {}

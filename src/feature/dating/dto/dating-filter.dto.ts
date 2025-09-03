@@ -3,7 +3,6 @@ import {
   IsBoolean,
   IsEnum,
   IsInt,
-  IsObject,
   IsOptional,
   ValidateNested,
 } from 'class-validator';
@@ -12,10 +11,10 @@ import { RangeEmbDto } from 'src/common/dtos/range-emb-.dto';
 import {
   DateIntention,
   DietaryPreference,
-  LoveLanguageType,
   MaritalTimelineType,
+  RelocateForMarriage,
 } from 'src/common/types/enums/user.enum';
-import { RhFactor, YesNo } from 'src/common/types/enums/other.enum';
+import { RhFactor } from 'src/common/types/enums/other.enum';
 import { PartialType } from '@nestjs/mapped-types';
 import { BaseProfileFilterDto } from 'src/common/dtos/base-profile-filter.dto';
 
@@ -35,10 +34,6 @@ export class CreateDatingFilterDto extends BaseProfileFilterDto {
   @IsBoolean()
   isHeightVerified: boolean;
 
-  @ValidateNested()
-  @Type(() => RangeEmbDto)
-  religious: RangeEmbDto;
-
   @IsArray()
   @IsEnum(DietaryPreference, { each: true })
   diet: DietaryPreference[];
@@ -47,29 +42,33 @@ export class CreateDatingFilterDto extends BaseProfileFilterDto {
   @Type(() => RangeEmbDto)
   wantChildren: RangeEmbDto;
 
-  @IsArray()
-  @IsEnum(YesNo, { each: true })
-  hasSickleCellTrait: YesNo[];
+  @IsOptional()
+  @IsBoolean()
+  excludeSickleCellTrait: boolean;
 
-  @IsArray()
-  @IsEnum(YesNo, { each: true })
-  hasThalassemiaTrait: YesNo[];
+  @IsOptional()
+  @IsBoolean()
+  excludeSickleCellDisease: boolean;
 
-  @IsArray()
-  @IsEnum(RhFactor, { each: true })
-  hasRhesusFactor: RhFactor[];
+  @IsOptional()
+  @IsBoolean()
+  excludeThalassemiaTrait: boolean;
 
-  @IsArray()
-  @IsEnum(YesNo, { each: true })
-  hasTaySachsTrait: YesNo[];
+  @IsOptional()
+  @IsEnum(RhFactor)
+  rhesusFactorIs: RhFactor;
 
-  @IsArray()
-  @IsEnum(YesNo, { each: true })
-  hasCysticFibrosisTrait: YesNo[];
+  @IsOptional()
+  @IsBoolean()
+  excludeTaySachsTrait: boolean;
 
-  @IsArray()
-  @IsEnum(YesNo, { each: true })
-  hasG6pdDeficiency: YesNo[];
+  @IsOptional()
+  @IsBoolean()
+  excludeCysticFibrosisTrait: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  excludeG6pdDeficiency: boolean;
 
   @ValidateNested()
   @Type(() => RangeEmbDto)
@@ -89,11 +88,11 @@ export class CreateDatingFilterDto extends BaseProfileFilterDto {
 
   @ValidateNested()
   @Type(() => RangeEmbDto)
-  upright: RangeEmbDto;
+  uprightness: RangeEmbDto;
 
   @ValidateNested()
   @Type(() => RangeEmbDto)
-  political: RangeEmbDto;
+  politicalView: RangeEmbDto;
 
   @ValidateNested()
   @Type(() => RangeEmbDto)
@@ -107,9 +106,9 @@ export class CreateDatingFilterDto extends BaseProfileFilterDto {
   @Type(() => RangeEmbDto)
   intimacyBelief: RangeEmbDto;
 
-  @IsOptional()
-  @IsObject()
-  feelLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
+  // @IsOptional()
+  // @IsObject()
+  // feelLoveLanguage?: Partial<Record<LoveLanguageType, number>>;
 
   @ValidateNested()
   @Type(() => RangeEmbDto)
@@ -119,18 +118,16 @@ export class CreateDatingFilterDto extends BaseProfileFilterDto {
   @Type(() => RangeEmbDto)
   spouseFriendship: RangeEmbDto;
 
-  @IsEnum(MaritalTimelineType)
-  maritalTimeline: MaritalTimelineType;
+  @ValidateNested()
+  @Type(() => RangeEmbDto)
+  maritalTimeline: RangeEmbDto;
 
   @IsArray()
-  @IsEnum(YesNo, { each: true })
-  relocateForMarriage: YesNo[];
-
-  @IsBoolean()
-  personalityFirst: boolean;
+  @IsEnum(RelocateForMarriage, { each: true })
+  relocateForMarriage: RelocateForMarriage[];
 }
 
 export class UpdateDateFilterDto extends PartialType(CreateDatingFilterDto) {
   @IsInt()
-  locationProfileId: string;
+  locationProfile: string;
 }

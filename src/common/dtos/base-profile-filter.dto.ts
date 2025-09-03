@@ -8,15 +8,26 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { RangeEmbDto } from './range-emb-.dto';
-import { MaritalStatus } from '../types/enums/user.enum';
+import {
+  Gender,
+  MaritalStatus,
+  PrimaryGuidePhilosophy,
+} from '../types/enums/user.enum';
 
 export class BaseProfileFilterDto {
   @ValidateNested()
   @Type(() => RangeEmbDto)
   age: RangeEmbDto;
 
+  @IsArray()
+  @IsEnum(PrimaryGuidePhilosophy, { each: true })
+  primaryGuidePhilosophy: PrimaryGuidePhilosophy[];
+
   @IsBoolean()
-  isVerified: boolean;
+  isFaceVerified: boolean;
+
+  @IsBoolean()
+  isIdVerified: boolean;
 
   @ValidateNested()
   @Type(() => RangeEmbDto)
@@ -37,6 +48,10 @@ export class BaseProfileFilterDto {
   @IsArray()
   @IsEnum(MaritalStatus, { each: true })
   maritalStatus: MaritalStatus[];
+
+  @IsArray()
+  @IsEnum(Gender, { each: true })
+  gendersInterestedIn: Gender[];
 
   @IsOptional()
   @IsArray()
@@ -63,6 +78,11 @@ export class BaseProfileFilterDto {
   @IsInt({ each: true })
   nationalitiesOf?: number[];
 
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  basedInCountries?: number[];
+
   @IsInt()
   maxDistanceMile?: number;
 
@@ -84,6 +104,10 @@ export class BaseProfileFilterDto {
   @IsInt({ each: true })
   religionsSects?: number[];
 
+  @ValidateNested()
+  @Type(() => RangeEmbDto)
+  religiousLevel: RangeEmbDto;
+
   @IsOptional()
   @IsArray()
   @IsInt({ each: true })
@@ -95,7 +119,7 @@ export class BaseProfileFilterDto {
 
   @IsOptional()
   @IsBoolean()
-  beliefAstronology?: boolean;
+  excludeAstroBelievers?: boolean;
 
   @IsOptional()
   @IsBoolean()
