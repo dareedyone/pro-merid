@@ -1,21 +1,7 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Patch,
-  UseGuards,
-  Req,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Post, Body, Patch, Req, Delete } from '@nestjs/common';
 import { DatingService } from './dating.service';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/common/guards/roles.guard';
-import { UserType } from 'src/common/types/enums/user.enum';
-import { Roles } from 'src/common/guards/roles.decorator';
-import {
-  CreateDatingProfileDto,
-  UpdateDatingProfileDto,
-} from './dto/dating-profile.dto';
+import { InteractionService } from '../../common/services/interaction.service';
+import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 import {
   CreateDatingPersonalityDto,
@@ -25,29 +11,31 @@ import {
   CreateDatingRelationshipDto,
   UpdateDatingRelationshipDto,
 } from './dto/dating-relationship.dto';
+// import {
+//   RematchRequestDto,
+//   RematchResponseDto,
+// } from '../../common/dtos/interaction.dto';
+import { CreateLocationProfileDto } from '../../common/dtos/base-location-profile.dto';
 import {
   CreateLocationProfileMediaDto,
-  RemoveMediaDto,
   UpdateMediaDto,
-} from 'src/common/dtos/location-media.dto';
-import { CreateLocationProfileDto } from 'src/common/dtos/base-location-profile.dto';
+  RemoveMediaDto,
+} from '../../common/dtos/location-media.dto';
+import { ProfileType } from 'src/common/types/enums/other.enum';
+import { BaseProfileController } from '../../common/controllers/base-profile.controller';
 
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserType.USER)
 @Controller('dating')
-export class DatingController {
-  constructor(private readonly datingService: DatingService) {}
-
-  @Post()
-  createProfile(@Req() req: Request, @Body() dto: CreateDatingProfileDto) {
-    const authId = req?.user?.sub;
-    return this.datingService.addProfile(authId, dto);
+export class DatingController extends BaseProfileController {
+  constructor(
+    private readonly datingService: DatingService,
+    protected readonly interactionService: InteractionService,
+    protected readonly authService: AuthService,
+  ) {
+    super(datingService, interactionService, authService);
   }
 
-  @Patch()
-  updateProfile(@Req() req: Request, @Body() dto: UpdateDatingProfileDto) {
-    const authId = req?.user?.sub;
-    return this.datingService.updateProfile(authId, dto);
+  protected get profileType(): ProfileType {
+    return ProfileType.DATE;
   }
 
   @Post('personality')
@@ -109,9 +97,27 @@ export class DatingController {
     const authId = req?.user?.sub;
     return this.datingService.updateLocationProfileMedia(authId, dto);
   }
+
   @Delete('location-profile/media')
   removeLocationProfileMedia(@Req() req: Request, @Body() dto: RemoveMediaDto) {
     const authId = req?.user?.sub;
     return this.datingService.removeLocationProfileMedia(authId, dto);
   }
+
+  // @Post('interactions/rematch/request')
+  // async requestRematch(@Req() req: Request, @Body() _dto: RematchRequestDto) {
+  //   const _authId = req?.user?.sub;
+  //   // TODO: Implement rematch logic in InteractionService if needed
+  //   throw new Error('Rematch not yet implemented in unified service');
+  // }
+
+  // @Post('interactions/rematch/respond')
+  // async respondToRematch(
+  //   @Req() req: Request,
+  //   @Body() _dto: RematchResponseDto,
+  // ) {
+  //   const _authId = req?.user?.sub;
+  //   // TODO: Implement rematch logic in InteractionService if needed
+  //   throw new Error('Rematch not yet implemented in unified service');
+  // }
 }

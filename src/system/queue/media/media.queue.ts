@@ -5,8 +5,11 @@ import { RekognitionService } from 'src/system/aws/rekognition.service';
 import { MediaQueueService } from './media.qservice';
 import { UserService } from 'src/feature/user/user.service';
 import { DatingService } from 'src/feature/dating/dating.service';
-import { NotificationService } from 'src/system/notification/notification.service';
-import { MIN_SIMILARITY } from 'src/common/contant';
+import {
+  NotificationService,
+  NotificationType,
+} from 'src/system/notification/notification.service';
+// import { MIN_SIMILARITY } from 'src/common/contant';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { JobContextService } from '../job-context.service';
 import { MediaCategory, MediaJobContext, MediaJobType } from './media.type';
@@ -57,7 +60,7 @@ export class MediaProcessor {
   @Process(MediaJobType.VERIFY_SELFIE)
   async handleVerifySelfie(job: Job<JobPayload>) {
     const context = await this.getContext(job.data.jobId);
-    const { pushToken, jobId } = context;
+    const { jobId } = context;
 
     if (!context?.selfie) {
       // some error log/ dd or track js, it means the selfie was provided but not here probably cache expired since dto would already checked for selfie
@@ -67,11 +70,15 @@ export class MediaProcessor {
     const isLiveSelfie = await this.rekognitionService.detectLiveness(
       context.selfie,
     );
+
     if (!isLiveSelfie) {
-      await this.notificationService.sendPushNotification({
-        pushToken,
-        title: 'Selfie Verification failed',
-        body: 'Your uploaded selfie could not be verified. Please try again.',
+      await this.notificationService.sendNotification({
+        userId: context.userId,
+        type: NotificationType.VERIFICATION,
+        data: {
+          title: 'Selfie Verification failed',
+          body: 'Your uploaded selfie could not be verified. Please try again.',
+        },
       });
       await this.jobContextService.delete('media', jobId);
       return;
@@ -83,7 +90,7 @@ export class MediaProcessor {
   @Process(MediaJobType.VERIFY_PICTURES)
   async handleVerifyPictures(job: Job<JobPayload>) {
     const context = await this.getContext(job.data.jobId);
-    const { jobId, pushToken, selfie, profilePictures } = context;
+    const { jobId, selfie, profilePictures } = context;
 
     if (!selfie || !profilePictures?.length) {
       throw new UnprocessableEntityException(
@@ -103,10 +110,13 @@ export class MediaProcessor {
 
     //note: here is what controls if we want all user pictures to be them or not
     if (!matches.length || profilePictures.length !== matches.length) {
-      await this.notificationService.sendPushNotification({
-        pushToken,
-        title: 'Profile Verification failed.',
-        body: `We couldn't detect you are the one in some of your pictures. Please try again.`,
+      await this.notificationService.sendNotification({
+        userId: context.userId,
+        type: NotificationType.VERIFICATION,
+        data: {
+          title: 'Profile Verification failed.',
+          body: `We couldn't detect you are the one in some of your pictures. Please try again.`,
+        },
       });
       await this.jobContextService.delete('media', jobId);
     }
@@ -124,7 +134,6 @@ export class MediaProcessor {
       selfie,
       profilePictures,
       isNewSelfie,
-      pushToken,
     } = context;
 
     const picturesToUpload = [];
@@ -170,10 +179,13 @@ export class MediaProcessor {
     const uploadResponse = await this.s3Service.uploadFiles(picturesToUpload);
     if (isNewSelfie) {
       await this.userService.updateFaceVerificationStatus(userId, true);
-      await this.notificationService.sendPushNotification({
-        pushToken,
-        title: 'Profile Verification',
-        body: 'Your profile pictures have been successfully verified.',
+      await this.notificationService.sendNotification({
+        userId,
+        type: NotificationType.VERIFICATION,
+        data: {
+          title: 'Profile Verification',
+          body: 'Your profile pictures have been successfully verified.',
+        },
       });
     }
 
@@ -188,10 +200,13 @@ export class MediaProcessor {
       // Handle friend media upload logic here
     }
 
-    await this.notificationService.sendPushNotification({
-      pushToken,
-      title: 'Media Upload',
-      body: 'Your media has been successfully uploaded.',
+    await this.notificationService.sendNotification({
+      userId,
+      type: NotificationType.MEDIA,
+      data: {
+        title: 'Media Upload',
+        body: 'Your media has been successfully uploaded.',
+      },
     });
 
     await this.handleAfterMath(job, context);

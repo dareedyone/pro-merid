@@ -29,7 +29,7 @@ import { Ethnic } from '../../../location/entities/ethnic.entity';
 import { ReligionSect } from './character/religion-sect.entity';
 import { Interest } from './character/interest.entity';
 import { Country } from '../../../location/entities/country.entity';
-import { FriendProfile } from '../profile/friend.profile';
+import { FriendProfile } from '../../../friends/entities/friend.profile';
 // import { RangeEmb } from 'src/common/entities/range.emb';
 import { Anchor } from './anchor.entity';
 import { DatingProfile } from 'src/feature/dating/entities/dating.profile';
@@ -167,6 +167,12 @@ export class User {
     cascade: [Cascade.ALL],
   })
   friendProfile?: FriendProfile;
+
+  @Property({ type: DateType, nullable: true })
+  lastSeenAt?: Date;
+
+  @Property({ nullable: true, default: 'UTC' })
+  timezone?: string;
 
   @Property({ nullable: true })
   createdAt? = new Date();

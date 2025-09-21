@@ -1,10 +1,9 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
-import { Cache } from 'cache-manager';
+import { Injectable } from '@nestjs/common';
+import { RedisService } from '../cache/redis.service';
 
 @Injectable()
 export class JobContextService {
-  constructor(@Inject(CACHE_MANAGER) private cache: Cache) {}
+  constructor(private readonly redis: RedisService) {}
 
   private buildKey(namespace: string, jobId: string): string {
     return `jobctx:${namespace}:${jobId}`;
@@ -17,15 +16,20 @@ export class JobContextService {
     ttl = 1000 * 60 * 24 * 7, // 7 days
   ): Promise<void> {
     const key = this.buildKey(namespace, jobId);
-    const current = (await this.cache.get<T>(key)) || ({} as T);
-    await this.cache.set(key, { ...current, ...data }, ttl);
+    const currentJson = await this.redis.get(key);
+    const current = currentJson ? JSON.parse(currentJson) : ({} as T);
+    const updated = { ...current, ...data };
+    await this.redis.set(key, JSON.stringify(updated), ttl);
   }
 
   async get<T>(namespace: string, jobId: string): Promise<T | null> {
-    return await this.cache.get<T>(this.buildKey(namespace, jobId));
+    const key = this.buildKey(namespace, jobId);
+    const data = await this.redis.get(key);
+    return data ? JSON.parse(data) : null;
   }
 
   async delete(namespace: string, jobId: string): Promise<void> {
-    await this.cache.del(this.buildKey(namespace, jobId));
+    const key = this.buildKey(namespace, jobId);
+    await this.redis.del(key);
   }
 }

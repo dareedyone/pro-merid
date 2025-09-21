@@ -147,6 +147,10 @@ export class UserService {
     await this.em.flush();
   }
 
+  async findById(userId: string): Promise<User> {
+    return this.userRepo.findOneOrFail({ id: userId }, { populate: ['auth'] });
+  }
+
   // async fetchAuthUser(authId: string, authWithUser = false): Promise<User> {
   //   if (authWithUser) {
   //     const auth = await this.authRepo.findOneOrFail(

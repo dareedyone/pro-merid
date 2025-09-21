@@ -1,14 +1,11 @@
 import { Entity, Property, OneToOne } from '@mikro-orm/core';
 import { BaseProfileFilter } from 'src/common/entities/base.profile-filter';
-import { FriendLocationProfile } from '../../profile/friend-location.profile';
+import { FriendProfile } from './friend.profile';
 
 @Entity()
 export class FriendFilter extends BaseProfileFilter {
-  @OneToOne(
-    () => FriendLocationProfile,
-    (locationProfile) => locationProfile.friendFilter,
-  )
-  locationProfile!: FriendLocationProfile;
+  @OneToOne(() => FriendProfile, (friendProfile) => friendProfile.friendFilter)
+  friendProfile!: FriendProfile;
 
   @Property({ default: false })
   bff: boolean = false;

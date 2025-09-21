@@ -11,7 +11,6 @@ import { RangeEmbDto } from 'src/common/dtos/range-emb-.dto';
 import {
   DateIntention,
   DietaryPreference,
-  MaritalTimelineType,
   RelocateForMarriage,
 } from 'src/common/types/enums/user.enum';
 import { RhFactor } from 'src/common/types/enums/other.enum';

@@ -28,7 +28,7 @@ export class EmailQueueService {
   }
 
   async sendEmailJob(data: { to: string; subject: string; body: string }) {
-    await this.emailQueue.add(SEND_EMAIL_JOB, data, {
+    return await this.emailQueue.add(SEND_EMAIL_JOB, data, {
       attempts: 3,
       backoff: 5000,
     });
