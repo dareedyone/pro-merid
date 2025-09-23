@@ -16,6 +16,7 @@ import { RolesGuard } from '../guards/roles.guard';
 import { Roles } from '../guards/roles.decorator';
 import { UserType } from '../types/enums/user.enum';
 import { InteractionService } from '../services/interaction.service';
+import { BaseProfileService } from '../services/base-profile.service';
 import {
   CreateInteractionDto,
   UnmatchDto,
@@ -32,20 +33,6 @@ import {
   UpdateProfileDto,
   UpdateFilterDto,
 } from '../dtos/profile.dto';
-
-export interface BaseProfileService {
-  addProfile(authId: string, dto: CreateProfileDto): Promise<void>;
-  updateProfile(authId: string, dto: UpdateProfileDto): Promise<void>;
-  // addLocationProfile?(authId: string, dto: any): Promise<void>;
-  // addLocationProfileMedia?(authId: string, dto: any): Promise<void>;
-  // updateLocationProfileMedia?(authId: string, dto: any): Promise<void>;
-  // removeLocationProfileMedia?(authId: string, dto: any): Promise<void>;
-  updateFilter(authId: string, dto: UpdateFilterDto): Promise<void>;
-  findPotentialMatches?(
-    authId: string,
-    locationProfileId?: string,
-  ): Promise<any[]>;
-}
 
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserType.USER)

@@ -37,7 +37,6 @@ import { UploadPictureResponseObjType } from 'src/common/types/interface';
 import { GeoFallbackService } from '../location/geo-fallback.service';
 import { Country } from '../location/entities/country.entity';
 import { Region } from '../location/entities/region.entity';
-import { UnknownCountry } from 'src/common/seeders/osm/country-meta';
 import { AuthService } from '../auth/auth.service';
 import { Media } from '../user/entities/media.entity';
 import { ConfigService } from '@nestjs/config';
@@ -46,8 +45,7 @@ import {
   CreateLocationProfileDto,
   UpdateProfileLocationDto,
 } from 'src/common/dtos/base-location-profile.dto';
-import { OrmHelperService } from 'src/common/services/orm-helper.service';
-import { BaseProfileService } from 'src/common/controllers/base-profile.controller';
+import { BaseProfileService } from 'src/common/services/base-profile.service';
 import { JobContextService } from 'src/system/queue/job-context.service';
 import {
   MediaCategory,
@@ -69,19 +67,138 @@ interface CompatibilityScoreOptions {
   alias: string;
 }
 
+// Response type for findPotentialMatches - represents the complex compatibility analysis result
+interface DatingMatchResponse {
+  // Base entity fields from the query
+  id: string;
+  point: any;
+  location?: string;
+  country?: any;
+  usePinLocation?: boolean;
+  pinnedPoint?: any;
+  createdAt?: Date;
+  updatedAt?: Date;
+
+  // DatingProfile fields (dp.*)
+  datingProfile: {
+    id: string;
+    bio?: string;
+    height?: number;
+    lookingFor?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+
+  // User fields (u.*)
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    displayName: string;
+    dob: Date;
+    gender: string;
+    maritalStatus: string;
+    educationLevel: number;
+    profession?: any;
+    religionSect?: any;
+    ethnicity?: any;
+    originCountry?: any;
+    grewUpIn?: any;
+    nationalities?: any[];
+    isFaceVerified?: boolean;
+    ageVerified?: boolean;
+    smokingStatus?: number;
+    drinkingStatus?: number;
+    drugUseStatus?: number;
+    beliefAstronology?: boolean;
+    isCeleb?: boolean;
+    isActivated?: boolean;
+    lastSeenAt?: Date;
+    timezone?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+  };
+
+  // Optional joined fields
+  datingFilter?: any;
+  personality?: any;
+  biol?: any;
+  relationship?: any;
+
+  // Compatibility analysis (for TrueFynd users)
+  compatibility_data?: {
+    score: number;
+    analysis: {
+      gender: boolean;
+      intention: boolean;
+      age: boolean;
+      education: boolean;
+      maritalStatus: boolean;
+      primaryGuidePhilosophy: boolean;
+      diet: boolean;
+      profession: boolean;
+      professionExcluded: boolean;
+      location: boolean;
+      originCountry: boolean;
+      grewUpIn: boolean;
+      nationality: boolean;
+      ethnicity: boolean;
+      religion: boolean;
+      religionSect: boolean;
+      religiousLevel: boolean;
+      interests: boolean;
+      children: boolean;
+      smoking: boolean;
+      drinking: boolean;
+      drug: boolean;
+      faceVerified: boolean;
+      idVerified: boolean;
+      astrology: boolean;
+      height: boolean;
+      heightVerified: boolean;
+      bodyType: boolean;
+      rhesusFactor: boolean;
+      sickleCellTrait: boolean;
+      sickleCellDisease: boolean;
+      thalassemiaTrait: boolean;
+      taySachsTrait: boolean;
+      cysticFibrosisTrait: boolean;
+      g6pdDeficiency: boolean;
+      financialAttitude: boolean;
+      honesty: boolean;
+      kindness: boolean;
+      generosity: boolean;
+      uprightness: boolean;
+      politicalView: boolean;
+      dressSense: boolean;
+      relationshipBelief: boolean;
+      intimacyBelief: boolean;
+      parentingStyle: boolean;
+      maritalTimeline: boolean;
+      relocateForMarriage: boolean;
+      wantChildren: boolean;
+      spouseFriendship: boolean;
+    };
+  };
+
+  // Simple compatibility score (for non-TrueFynd users)
+  compatibility_score?: number;
+
+  // Distance calculation (when location is available)
+  distance?: number;
+}
+
 interface CompatibilityScoreWithAnalysisOptions
   extends CompatibilityScoreOptions {
   hasTrueFynd: boolean;
 }
 
 @Injectable()
-export class DatingService implements BaseProfileService {
+export class DatingService extends BaseProfileService {
   constructor(
     private readonly mediaQueueService: MediaQueueService,
     private readonly configService: ConfigService,
-    private readonly authService: AuthService,
-    private readonly geoFallbackService: GeoFallbackService,
-    private readonly em: EntityManager,
+    protected readonly em: EntityManager,
     private readonly jobContextService: JobContextService,
     @InjectRepository(DatingLocationProfile)
     private datingLocationProfileRepo: EntityRepository<DatingLocationProfile>,
@@ -93,11 +210,22 @@ export class DatingService implements BaseProfileService {
     private datingRelationshipRepo: EntityRepository<DatingRelationship>,
     @InjectRepository(DatingFilter)
     private datingFilterRepo: EntityRepository<DatingFilter>,
-    @InjectRepository(Country) private countryRepo: EntityRepository<Country>,
-    @InjectRepository(Region) private regionRepo: EntityRepository<Region>,
-    @InjectRepository(Media) private mediaRepo: EntityRepository<Media>,
+    @InjectRepository(Media) protected mediaRepo: EntityRepository<Media>,
     @InjectRepository(User) private userRepo: EntityRepository<User>,
-  ) {}
+    authService: AuthService,
+    geoFallbackService: GeoFallbackService,
+    @InjectRepository(Country) countryRepo: EntityRepository<Country>,
+    @InjectRepository(Region) regionRepo: EntityRepository<Region>,
+  ) {
+    super(
+      em,
+      authService,
+      mediaRepo,
+      geoFallbackService,
+      countryRepo,
+      regionRepo,
+    );
+  }
 
   private extractUserProfileData(datingProfile: DatingProfile) {
     return {
@@ -224,7 +352,7 @@ export class DatingService implements BaseProfileService {
     options: CompatibilityScoreWithAnalysisOptions,
   ): string {
     const { datingProfile, condition, alias, hasTrueFynd } = options;
-    // Extract all current user's profile data for comprehensive checking
+
     const userData = this.extractUserProfileData(datingProfile);
     const {
       userGender,
@@ -611,7 +739,7 @@ export class DatingService implements BaseProfileService {
 
   private buildCompatibilityScore(options: CompatibilityScoreOptions): string {
     const { datingProfile, condition, alias } = options;
-    // Extract all current user's profile data for comprehensive checking
+
     const userData = this.extractUserProfileData(datingProfile);
     const {
       userGender,
@@ -932,60 +1060,6 @@ export class DatingService implements BaseProfileService {
     )::int as ${alias}`;
   }
 
-  private async handleLocation(
-    payload: Pick<CreateLocationProfileDto, 'location' | 'address'>,
-  ) {
-    const { coords } = payload.location;
-    let { country: countryName, isoCountryCode } = payload.address;
-
-    const { city, district, subregion, region } = payload.address;
-
-    let situated;
-
-    if (!isoCountryCode && !countryName) {
-      const location = await this.geoFallbackService.reverseGeocode(coords);
-      countryName = location.country;
-      isoCountryCode = location.countryCode;
-      situated =
-        city ??
-        location.city ??
-        district ??
-        location.district ??
-        subregion ??
-        region ??
-        location.region;
-    }
-
-    const point: GeoPoint = {
-      type: 'Point',
-      coordinates: [coords.longitude, coords.latitude], // Note: [lng, lat] order!
-    };
-
-    let country = await this.countryRepo.findOne({
-      $or: [{ isoCode: isoCountryCode }, { name: countryName }],
-    });
-
-    if (!country) {
-      const region = (await this.regionRepo.findOne({
-        name: UnknownCountry.region,
-      })) as Region;
-
-      country = this.countryRepo.create({
-        ...UnknownCountry,
-        name: `lt:${coords.longitude}|lg${coords.latitude}`,
-        region,
-      });
-      // could log or check manually
-    }
-
-    return {
-      country,
-      point,
-      location: situated,
-      isoCountryCode,
-    };
-  }
-
   async addProfile(
     authId: string,
     payload: CreateDatingProfileDto,
@@ -1107,7 +1181,6 @@ export class DatingService implements BaseProfileService {
     await this.em.persistAndFlush(datingProfile.relationship);
   }
 
-  // update user location: pinned ? with country ?
   async addLocationProfile(
     authId: string,
     payload: CreateLocationProfileDto,
@@ -1267,47 +1340,24 @@ export class DatingService implements BaseProfileService {
 
     await this.jobContextService.set<MediaJobContext>('media', jobId, context);
     await this.mediaQueueService.enqueueJob(jobType, { jobId });
-
-    // if succesful, I have decidecide to use push notification, but verification entity is still needed for id verifications
   }
 
   async handleMediaUpdate(
     payload: UploadPictureResponseObjType,
   ): Promise<void> {
-    const { pictures, userId, locationProfileId } = payload;
+    const { profileId } = payload;
     const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
       {
-        id: locationProfileId,
+        id: profileId,
       },
       { populate: ['media'] },
     );
 
-    for (const media of pictures) {
-      const existingMedia = locationProfile.media
-        .getItems()
-        .find((m) => m.order === media.order);
-
-      if (existingMedia) {
-        existingMedia.url = media.url;
-        existingMedia.fileType = media.fileType;
-        existingMedia.isUser = media.isUser;
-        existingMedia.order = media.order;
-      } else {
-        const newMedia = this.mediaRepo.create({
-          user: userId,
-          datingLocationProfile: locationProfile,
-          url: media.url,
-          fileType: media.fileType,
-          isUser: media.isUser,
-          order: media.order,
-        });
-
-        this.em.persist(newMedia);
-        locationProfile.media.add(newMedia);
-      }
-    }
-
-    await this.em.flush();
+    await this.updateMediaForProfile(
+      payload,
+      locationProfile,
+      'datingLocationProfile',
+    );
   }
 
   async updateLocationProfileMedia(
@@ -1475,7 +1525,6 @@ export class DatingService implements BaseProfileService {
       locationProfile.datingProfile,
     );
 
-    //todo:  use this again for matching: either reset when subscription expires or use only allowed fields for matching
     const allowedFilters = this.reduceToAllowedFilters(payload, hasPremium);
 
     if (!locationProfile.datingFilter) {
@@ -1492,11 +1541,14 @@ export class DatingService implements BaseProfileService {
     await this.em.flush();
   }
 
-  async findPotentialMatches(authId: string, locationProfileId: string) {
+  async findPotentialMatches<T = DatingMatchResponse>(
+    authId: string,
+    profileId?: string,
+  ): Promise<T[]> {
     const { user } = await this.authService.fetchAuthUser(authId);
 
     const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
-      { id: locationProfileId, user },
+      { id: profileId, user },
       { populate: ['datingFilter', 'datingProfile', 'datingProfile.user'] },
     );
 
@@ -1551,7 +1603,7 @@ export class DatingService implements BaseProfileService {
     // todo: remove some options from each category of filter to maike it more specific e.g dress sense and diet should include only hijab etc and halal once you know they are muslim and primary guide philiposophy is religion
     // this is needed in onboarding and not in the filter section
 
-    this.applyBaseProfileFilters(qb, filters);
+    this.applyDatingBaseProfileFilters(qb, filters);
 
     this.applyLocationFilters(
       qb,
@@ -1613,7 +1665,7 @@ export class DatingService implements BaseProfileService {
     }
 
     qb.limit(50);
-    return await qb.getResultList();
+    return (await qb.getResultList()) as T[];
   }
   // todo: ensur there is no race condiation when creating dating interaction that could lead to match not happening
   // note: profile completion monitor should be handled on client - just warn them
@@ -1623,150 +1675,13 @@ export class DatingService implements BaseProfileService {
   // anchor
   // events
   // testing
+  // handle potential matches response to only return usable fields
 
-  private applyBaseProfileFilters(
+  private applyDatingBaseProfileFilters(
     qb: QueryBuilder<any>,
     filters: Omit<UpdateDateFilterDto, 'locationProfile'>,
   ): void {
-    if (filters.age) {
-      qb.andWhere('EXTRACT(YEAR FROM AGE(u.dob)) BETWEEN ? AND ?', [
-        filters.age.min ?? 18,
-        filters.age.max ?? 99,
-      ]);
-    }
-
-    if (
-      filters.primaryGuidePhilosophy &&
-      Array.isArray(filters.primaryGuidePhilosophy) &&
-      filters.primaryGuidePhilosophy.length > 0
-    ) {
-      qb.andWhere('u.primaryGuidePhilosophy = ANY(?)', [
-        filters.primaryGuidePhilosophy,
-      ]);
-    }
-
-    if (filters.education) {
-      qb.andWhere('u.educationLevel BETWEEN ? AND ?', [
-        filters.education.min,
-        filters.education.max,
-      ]);
-    }
-
-    if (filters.maritalStatus?.length) {
-      qb.andWhere('u.maritalStatus = ANY(?)', [filters.maritalStatus]);
-    }
-
-    if (filters.restrictToProfessions?.length) {
-      qb.andWhere('u.profession.id IN (?)', [filters.restrictToProfessions]);
-    }
-    if (filters.excludeProfessions?.length) {
-      qb.andWhere('u.profession.id NOT IN (?)', [filters.excludeProfessions]);
-    }
-
-    if (filters.nationalitiesOf?.length) {
-      qb.join('u.nationalities', 'n').andWhere('n.id IN (?)', [
-        filters.nationalitiesOf,
-      ]);
-    }
-
-    if (filters.originCountries?.length) {
-      qb.andWhere('u.originCountry.id IN (?)', [filters.originCountries]);
-    }
-
-    if (filters.grewupCountries?.length) {
-      qb.andWhere('u.grewUpIn.id IN (?)', [filters.grewupCountries]);
-    }
-
-    if (filters.religions?.length) {
-      qb.join('u.religionSect', 'rs')
-        .join('rs.religion', 'r')
-        .andWhere('r.id IN (?)', [filters.religions]);
-    }
-
-    if (filters.religionsSects?.length) {
-      qb.join('u.religionSect', 'rs').andWhere('rs.id IN (?)', [
-        filters.religionsSects,
-      ]);
-    }
-
-    if (
-      filters.religiousLevel &&
-      typeof filters.religiousLevel === 'object' &&
-      'min' in filters.religiousLevel &&
-      'max' in filters.religiousLevel &&
-      filters.religiousLevel.min !== undefined &&
-      filters.religiousLevel.max !== undefined
-    ) {
-      qb.andWhere('u.religiousLevel BETWEEN ? AND ?', [
-        filters.religiousLevel.min,
-
-        filters.religiousLevel.max,
-      ]);
-    }
-
-    if (
-      filters.ethniticities &&
-      Array.isArray(filters.ethniticities) &&
-      filters.ethniticities.length > 0
-    ) {
-      qb.andWhere('u.ethnicity.id IN (?)', [filters.ethniticities]);
-    }
-
-    if (
-      filters.interests &&
-      Array.isArray(filters.interests) &&
-      filters.interests.length > 0
-    ) {
-      qb.join('u.interests', 'i').andWhere('i.id IN (?)', [filters.interests]);
-    }
-
-    if (filters.hasChildren) {
-      qb.andWhere('u.children BETWEEN ? AND ?', [
-        filters.hasChildren.min,
-        filters.hasChildren.max,
-      ]);
-    }
-
-    if (filters.gendersInterestedIn?.length) {
-      qb.andWhere('u.gender = ANY(?)', [filters.gendersInterestedIn]);
-    }
-    if (filters.smoking) {
-      qb.andWhere('u.smokingStatus BETWEEN ? AND ?', [
-        filters.smoking.min,
-        filters.smoking.max,
-      ]);
-    }
-
-    if (filters.drinking) {
-      qb.andWhere('u.drinkingStatus BETWEEN ? AND ?', [
-        filters.drinking.min,
-        filters.drinking.max,
-      ]);
-    }
-
-    if (filters.drug) {
-      qb.andWhere('u.drugUseStatus BETWEEN ? AND ?', [
-        filters.drug.min,
-        filters.drug.max,
-      ]);
-    }
-
-    if (filters.isFaceVerified) {
-      qb.andWhere('u.isFaceVerified = ?', [true]);
-    }
-
-    if (filters.isIdVerified) {
-      qb.andWhere('u.ageVerified = ?', [true]);
-    }
-
-    // note: if user believe in astronology we use that to show is users astrology sign only
-    if (filters.excludeAstroBelievers) {
-      qb.andWhere('u.beliefAstronology = ?', [false]);
-    }
-
-    if (filters.useAstronology) {
-      // todo: check user dob and show only users that matches
-    }
+    super.applyBaseProfileFilters(qb, filters);
   }
 
   private applyDateProfileFilters(

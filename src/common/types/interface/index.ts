@@ -37,6 +37,6 @@ export interface UploadPictureResponseType {
 
 export interface UploadPictureResponseObjType {
   pictures: UploadPictureResponseType[];
-  locationProfileId: string;
+  profileId: string;
   userId: string;
 }

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { AuthService } from '../../auth/auth.service';
@@ -11,12 +11,16 @@ import { UpdateFriendFilterDto } from '../dtos/friend-filter.dto';
 import { FriendProfile } from '../entities/friend.profile';
 import { FriendFilter } from '../entities/friend.filter';
 import { FocusedIntention } from '../entities/focused-intention.entity';
-import { BaseProfileService } from '../../../common/controllers/base-profile.controller';
+import { BaseProfileService } from '../../../common/services/base-profile.service';
+import { Media } from '../../user/entities/media.entity';
+import { CreateLocationProfileDto } from '../../../common/dtos/base-location-profile.dto';
+import { UploadPictureResponseObjType } from '../../../common/types/interface';
+import { GeoFallbackService } from '../../location/geo-fallback.service';
+import { Country } from '../../location/entities/country.entity';
+import { Region } from '../../location/entities/region.entity';
 
 @Injectable()
-export class FriendsService implements BaseProfileService {
-  private readonly logger = new Logger(FriendsService.name);
-
+export class FriendsService extends BaseProfileService {
   constructor(
     @InjectRepository(FriendProfile)
     private readonly friendProfileRepo: EntityRepository<FriendProfile>,
@@ -24,9 +28,23 @@ export class FriendsService implements BaseProfileService {
     private readonly friendFilterRepo: EntityRepository<FriendFilter>,
     @InjectRepository(FocusedIntention)
     private readonly focusedIntentionRepo: EntityRepository<FocusedIntention>,
-    private readonly em: EntityManager,
-    private readonly authService: AuthService,
-  ) {}
+    @InjectRepository(Media)
+    protected readonly mediaRepo: EntityRepository<Media>,
+    protected readonly em: EntityManager,
+    authService: AuthService,
+    geoFallbackService: GeoFallbackService,
+    @InjectRepository(Country) countryRepo: EntityRepository<Country>,
+    @InjectRepository(Region) regionRepo: EntityRepository<Region>,
+  ) {
+    super(
+      em,
+      authService,
+      mediaRepo,
+      geoFallbackService,
+      countryRepo,
+      regionRepo,
+    );
+  }
 
   async addProfile(authId: string, dto: CreateFriendProfileDto): Promise<void> {
     const { user } = await this.authService.fetchAuthUser(authId);
@@ -38,10 +56,15 @@ export class FriendsService implements BaseProfileService {
       );
     }
 
+    const { country, point, location } = await this.handleLocation(dto);
+
     const friendProfile = this.friendProfileRepo.create({
       user,
       bff: dto.bff || false,
       socialize: dto.socialize || false,
+      country,
+      point,
+      location,
     });
 
     if (dto.focusedIntentions && dto.focusedIntentions.length > 0) {
@@ -109,7 +132,7 @@ export class FriendsService implements BaseProfileService {
     await this.em.flush();
   }
 
-  async findPotentialMatches(authId: string): Promise<FriendProfile[]> {
+  async findPotentialMatches<T = FriendProfile>(authId: string): Promise<T[]> {
     const { user } = await this.authService.fetchAuthUser(authId);
 
     const friendProfile = await this.friendProfileRepo.findOneOrFail(
@@ -142,20 +165,15 @@ export class FriendsService implements BaseProfileService {
       whereConditions.socialize = filters.socialize;
     }
 
-    // Apply database-level filters (reducedToAllowedFilters already handles subscription logic)
     this.applyDatabaseFilters(whereConditions, filters);
 
     const friendProfiles = await this.friendProfileRepo.find(whereConditions, {
       populate: ['user', 'friendFilter', 'focusedIntentions'],
-      limit: hasControl ? 200 : 50, // Premium users get more results
+      orderBy: { createdAt: 'desc' },
+      limit: 50,
     });
 
-    // Sort by creation date (newest first) and limit to 50
-    friendProfiles.sort(
-      (a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0),
-    );
-
-    return friendProfiles.slice(0, 50);
+    return friendProfiles as T[];
   }
 
   private checkSubscriptions(friendProfile: FriendProfile) {
@@ -190,15 +208,60 @@ export class FriendsService implements BaseProfileService {
     return hasControl ? { ...basicFilters, ...rest } : basicFilters;
   }
 
-  /**
-   * Apply database-level filters
-   * The filters parameter already contains only the allowed filters based on subscription level
-   */
+  async handleMediaUpdate(
+    payload: UploadPictureResponseObjType,
+  ): Promise<void> {
+    const { profileId } = payload;
+
+    const friendProfile = await this.friendProfileRepo.findOneOrFail(
+      { id: profileId },
+      { populate: ['media'] },
+    );
+
+    await this.updateMediaForProfile(payload, friendProfile, 'friendProfile');
+  }
+
+  async updateLocation(
+    authId: string,
+    payload: Pick<CreateLocationProfileDto, 'location' | 'address'> & {
+      pinLocation?: boolean;
+    },
+  ): Promise<void> {
+    const { user } = await this.authService.fetchAuthUser(authId);
+
+    const friendProfile = await this.friendProfileRepo.findOneOrFail(
+      { user },
+      { populate: ['user'] },
+    );
+
+    const {
+      country,
+      point,
+      location: situated,
+    } = await this.handleLocation({
+      location: payload.location,
+      address: payload.address,
+    });
+
+    if (payload.pinLocation) {
+      friendProfile.usePinLocation = true;
+      friendProfile.pinnedPoint = point;
+      friendProfile.pinnedLocation = situated;
+      friendProfile.pinnedCountry = country;
+    } else {
+      friendProfile.usePinLocation = false;
+      friendProfile.point = point;
+      friendProfile.location = situated;
+      friendProfile.country = country;
+    }
+
+    await this.em.flush();
+  }
+
   private applyDatabaseFilters(
     whereConditions: Record<string, any>,
     filters: Omit<UpdateFriendFilterDto, 'locationProfile'>,
   ): void {
-    // Apply all available filters at database level for better performance
     if (filters.age) {
       const minAge = filters.age.min ?? 18;
       const maxAge = filters.age.max ?? 99;
@@ -231,6 +294,107 @@ export class FriendsService implements BaseProfileService {
       whereConditions['focusedIntentions.id'] = {
         $in: filters.focusedIntentions,
       };
+    }
+
+    if (filters.primaryGuidePhilosophy?.length) {
+      whereConditions['user.primaryGuidePhilosophy'] = {
+        $in: filters.primaryGuidePhilosophy,
+      };
+    }
+
+    if (filters.restrictToProfessions?.length) {
+      whereConditions['user.profession'] = {
+        $in: filters.restrictToProfessions,
+      };
+    }
+
+    if (filters.excludeProfessions?.length) {
+      whereConditions['user.profession'] = { $nin: filters.excludeProfessions };
+    }
+
+    if (filters.originCountries?.length) {
+      whereConditions['user.originCountry'] = { $in: filters.originCountries };
+    }
+
+    if (filters.grewupCountries?.length) {
+      whereConditions['user.grewupCountry'] = { $in: filters.grewupCountries };
+    }
+
+    if (filters.nationalitiesOf?.length) {
+      whereConditions['user.nationality'] = { $in: filters.nationalitiesOf };
+    }
+
+    if (filters.basedInCountries?.length) {
+      whereConditions['user.basedInCountry'] = {
+        $in: filters.basedInCountries,
+      };
+    }
+
+    if (filters.ethniticities?.length) {
+      whereConditions['user.ethnicity'] = { $in: filters.ethniticities };
+    }
+
+    if (filters.religions?.length) {
+      whereConditions['user.religion'] = { $in: filters.religions };
+    }
+
+    if (filters.religionsSects?.length) {
+      whereConditions['user.religionSect'] = { $in: filters.religionsSects };
+    }
+
+    if (filters.religiousLevel) {
+      whereConditions['user.religiousLevel'] = {
+        $gte: filters.religiousLevel.min ?? 1,
+        $lte: filters.religiousLevel.max ?? 5,
+      };
+    }
+
+    if (filters.interests?.length) {
+      whereConditions['user.interests'] = { $in: filters.interests };
+    }
+
+    if (filters.hasChildren) {
+      whereConditions['user.hasChildren'] = {
+        $gte: filters.hasChildren.min ?? 0,
+        $lte: filters.hasChildren.max ?? 5,
+      };
+    }
+
+    if (filters.smoking) {
+      whereConditions['user.smoking'] = {
+        $gte: filters.smoking.min ?? 0,
+        $lte: filters.smoking.max ?? 7,
+      };
+    }
+
+    if (filters.drinking) {
+      whereConditions['user.drinking'] = {
+        $gte: filters.drinking.min ?? 0,
+        $lte: filters.drinking.max ?? 7,
+      };
+    }
+
+    if (filters.drug) {
+      whereConditions['user.drug'] = {
+        $gte: filters.drug.min ?? 0,
+        $lte: filters.drug.max ?? 7,
+      };
+    }
+
+    if (filters.isFaceVerified) {
+      whereConditions['user.isFaceVerified'] = true;
+    }
+
+    if (filters.isIdVerified) {
+      whereConditions['user.isIdVerified'] = true;
+    }
+
+    if (filters.excludeAstroBelievers) {
+      whereConditions['user.useAstronology'] = { $ne: true };
+    }
+
+    if (filters.useAstronology !== undefined) {
+      whereConditions['user.useAstronology'] = filters.useAstronology;
     }
   }
 }

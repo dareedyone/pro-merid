@@ -110,8 +110,7 @@ export class InteractionService {
         const existingInteraction = await em.findOne(ProfileInteraction, {
           sourceUser,
           targetUser,
-          sourceProfileId: sourceUser.id,
-          targetProfileId: targetUser.id,
+          sourceProfileId: dto.sourceProfileId,
           type: interactionType,
           profileType: profileType,
         });
@@ -125,8 +124,10 @@ export class InteractionService {
           profileType: profileType,
           sourceUser,
           targetUser,
-          sourceProfileId: sourceUser.id,
-          targetProfileId: targetUser.id,
+          sourceProfileId: dto.sourceProfileId,
+          targetProfileId: dto.targetProfileId,
+          sourceLocationProfileId: dto.sourceProfileId,
+          targetLocationProfileId: dto.targetProfileId,
           interactionDate: new Date(),
           isMatch: false,
         });
@@ -139,8 +140,7 @@ export class InteractionService {
         const reverseInteraction = await em.findOne(ProfileInteraction, {
           sourceUser: targetUser,
           targetUser: sourceUser,
-          sourceProfileId: targetUser.id,
-          targetProfileId: sourceUser.id,
+          targetProfileId: dto.sourceProfileId,
           type: interactionType,
           profileType: profileType,
         });
@@ -217,8 +217,7 @@ export class InteractionService {
           const existingInteraction = await em.findOne(ProfileInteraction, {
             sourceUser,
             targetUser,
-            sourceProfileId: sourceUser.id,
-            targetProfileId: targetUser.id,
+            sourceProfileId: dto.sourceProfileId,
             type: interactionType,
             profileType: profileType,
           });

@@ -64,16 +64,14 @@
 //   CreateDateLocationProfileDto,
 // ) {}
 
-import { OmitType, PartialType, PickType } from '@nestjs/mapped-types';
+import { PartialType, PickType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsEnum,
-  IsInt,
   IsNotEmpty,
   IsNotEmptyObject,
   IsOptional,
-  IsString,
   ValidateNested,
 } from 'class-validator';
 import { LocationType } from 'src/common/types/enums/user.enum';
@@ -83,10 +81,7 @@ import {
 } from 'src/feature/location/dto/expo.location';
 // import { CreateMediaDto } from '../../../common/dtos/location-media.dto';
 
-export class CreateLocationProfileDto {
-  @IsEnum(LocationType)
-  type: LocationType; // todo: omit current due to flight mode
-
+export class CreateBaseLocationProfileDto {
   @IsNotEmptyObject()
   @ValidateNested()
   @Type(() => ExpoLocationDto)
@@ -96,6 +91,11 @@ export class CreateLocationProfileDto {
   @ValidateNested()
   @Type(() => ExpoAddressDto)
   address: ExpoAddressDto;
+}
+
+export class CreateLocationProfileDto extends CreateBaseLocationProfileDto {
+  @IsEnum(LocationType)
+  type: LocationType; // todo: omit current due to flight mode
 
   @IsOptional()
   @IsBoolean()

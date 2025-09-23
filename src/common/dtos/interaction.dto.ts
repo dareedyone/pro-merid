@@ -16,9 +16,15 @@ export class CreateInteractionDto {
   @IsString()
   targetUserId!: string;
 
+  @IsString()
+  targetProfileId: string;
+
   @IsOptional()
   @IsString()
   targetLocationProfileId?: string;
+
+  @IsString()
+  sourceProfileId: string;
 
   @IsOptional()
   @IsString()

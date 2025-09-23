@@ -101,7 +101,6 @@ export class NotificationService {
     try {
       let webSocketSent = false;
 
-      // Try WebSocket first if enabled
       if (strategy.webSocket) {
         webSocketSent = await this.tryWebSocketNotification(context);
         if (webSocketSent) {
@@ -109,7 +108,6 @@ export class NotificationService {
         }
       }
 
-      // Send push notification if WebSocket failed or is disabled
       if (strategy.push && !webSocketSent) {
         await this.sendPushNotification(context);
         this.logger.log(`Push notification sent to user ${userId}`);

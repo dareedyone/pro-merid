@@ -1,7 +1,7 @@
 import { Entity, PrimaryKey, Property, ManyToOne } from '@mikro-orm/core';
 import { User } from './user/user.entity';
 import { DatingLocationProfile } from '../../dating/entities/dating-location.profile';
-import { FriendLocationProfile } from './profile/friend-location.profile';
+import { FriendProfile } from '../../friends/entities/friend.profile';
 
 @Entity()
 export class Media {
@@ -16,10 +16,10 @@ export class Media {
   })
   datingLocationProfile?: DatingLocationProfile;
 
-  @ManyToOne(() => FriendLocationProfile, {
+  @ManyToOne(() => FriendProfile, {
     nullable: true,
   })
-  friendLocationProfile?: FriendLocationProfile;
+  friendProfile?: FriendProfile;
 
   // @Property()
   // filename!: string;

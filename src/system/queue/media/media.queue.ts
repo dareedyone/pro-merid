@@ -5,6 +5,7 @@ import { RekognitionService } from 'src/system/aws/rekognition.service';
 import { MediaQueueService } from './media.qservice';
 import { UserService } from 'src/feature/user/user.service';
 import { DatingService } from 'src/feature/dating/dating.service';
+import { FriendsService } from 'src/feature/friends/services/friends.service';
 import {
   NotificationService,
   NotificationType,
@@ -23,6 +24,7 @@ export class MediaProcessor {
     private readonly mediaQueueService: MediaQueueService,
     private readonly userService: UserService,
     private readonly datingService: DatingService,
+    private readonly friendsService: FriendsService,
     private readonly notificationService: NotificationService,
     private readonly jobContextService: JobContextService,
   ) {}
@@ -192,12 +194,12 @@ export class MediaProcessor {
     const upateData = {
       pictures: uploadResponse,
       userId,
-      locationProfileId,
+      profileId,
     };
     if (category === MediaCategory.DATING) {
       await this.datingService.handleMediaUpdate(upateData);
     } else if (category === MediaCategory.FRIEND) {
-      // Handle friend media upload logic here
+      await this.friendsService.handleMediaUpdate(upateData);
     }
 
     await this.notificationService.sendNotification({
