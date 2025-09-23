@@ -1670,7 +1670,6 @@ export class DatingService extends BaseProfileService {
   // todo: ensur there is no race condiation when creating dating interaction that could lead to match not happening
   // note: profile completion monitor should be handled on client - just warn them
   // next:
-  // friends
   // sub
   // anchor
   // events
