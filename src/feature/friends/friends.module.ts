@@ -13,6 +13,7 @@ import { AuthModule } from '../auth/auth.module';
 import { NotificationModule } from '../../system/notification/notification.module';
 import { ChatModule } from '../chat/chat.module';
 import { ActivityModule } from '../activity/activity.module';
+import { SubscriptionModule } from '../subscription/subscription.module';
 import { FriendController } from './friend.controller';
 
 @Module({
@@ -30,6 +31,7 @@ import { FriendController } from './friend.controller';
     NotificationModule,
     ChatModule,
     ActivityModule,
+    SubscriptionModule,
   ],
   controllers: [FriendController],
   providers: [FriendsService, InteractionService],

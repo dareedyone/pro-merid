@@ -17,12 +17,20 @@ import { Roles } from '../guards/roles.decorator';
 import { UserType } from '../types/enums/user.enum';
 import { InteractionService } from '../services/interaction.service';
 import { BaseProfileService } from '../services/base-profile.service';
+import { SubscriptionService } from '../../feature/subscription/services/subscription.service';
 import {
   CreateInteractionDto,
   UnmatchDto,
   RematchRequestDto,
   RematchResponseDto,
 } from '../dtos/interaction.dto';
+import {
+  SubscriptionStatusDto,
+  SubscriptionPlanDto,
+  PurchaseSubscriptionDto,
+  RenewSubscriptionDto,
+  CancelSubscriptionDto,
+} from '../../feature/subscription/dtos/subscription.dto';
 import {
   PaginationQueryDto,
   DailyCountQueryDto,
@@ -41,6 +49,7 @@ export abstract class BaseProfileController {
     protected readonly profileService: BaseProfileService,
     protected readonly interactionService: InteractionService,
     protected readonly authService: AuthService,
+    protected readonly subscriptionService: SubscriptionService,
   ) {}
 
   protected abstract get profileType(): ProfileType;
@@ -178,5 +187,54 @@ export abstract class BaseProfileController {
     }
     const authId = req?.user?.sub;
     return await this.interactionService.respondToRematch(authId, dto);
+  }
+
+  // Subscription endpoints
+
+  @Get('subscription/plans')
+  getSubscriptionPlans(): SubscriptionPlanDto[] {
+    return this.subscriptionService.getSubscriptionPlans(this.profileType);
+  }
+
+  @Get('subscription/status')
+  async getSubscriptionStatus(@Req() req: Request): Promise<SubscriptionStatusDto> {
+    const authId = req?.user?.sub;
+    return this.subscriptionService.getSubscriptionStatus(authId, this.profileType);
+  }
+
+  @Post('subscription/purchase')
+  async purchaseSubscription(
+    @Req() req: Request,
+    @Body() dto: Omit<PurchaseSubscriptionDto, 'profileType'>,
+  ): Promise<SubscriptionStatusDto> {
+    const authId = req?.user?.sub;
+    return this.subscriptionService.purchaseSubscription(authId, {
+      ...dto,
+      profileType: this.profileType,
+    });
+  }
+
+  @Post('subscription/renew')
+  async renewSubscription(
+    @Req() req: Request,
+    @Body() dto: Omit<RenewSubscriptionDto, 'profileType'>,
+  ): Promise<SubscriptionStatusDto> {
+    const authId = req?.user?.sub;
+    return this.subscriptionService.renewSubscription(authId, {
+      ...dto,
+      profileType: this.profileType,
+    });
+  }
+
+  @Post('subscription/cancel')
+  async cancelSubscription(
+    @Req() req: Request,
+    @Body() dto: Omit<CancelSubscriptionDto, 'profileType'>,
+  ): Promise<{ message: string }> {
+    const authId = req?.user?.sub;
+    return this.subscriptionService.cancelSubscription(authId, {
+      ...dto,
+      profileType: this.profileType,
+    });
   }
 }

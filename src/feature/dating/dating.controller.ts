@@ -2,6 +2,7 @@ import { Controller, Post, Body, Patch, Req, Delete } from '@nestjs/common';
 import { DatingService } from './dating.service';
 import { InteractionService } from '../../common/services/interaction.service';
 import { AuthService } from '../auth/auth.service';
+import { SubscriptionService } from '../subscription/services/subscription.service';
 import { Request } from 'express';
 import {
   CreateDatingPersonalityDto,
@@ -30,8 +31,9 @@ export class DatingController extends BaseProfileController {
     private readonly datingService: DatingService,
     protected readonly interactionService: InteractionService,
     protected readonly authService: AuthService,
+    protected readonly subscriptionService: SubscriptionService,
   ) {
-    super(datingService, interactionService, authService);
+    super(datingService, interactionService, authService, subscriptionService);
   }
 
   protected get profileType(): ProfileType {

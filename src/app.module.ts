@@ -24,6 +24,7 @@ import { PushNotificationService } from './system/notification/push-notification
 import { CronModule } from './system/cron/cron.module';
 import { ActivityModule } from './feature/activity/activity.module';
 import { CommonModule } from './common/common.module';
+import { SubscriptionModule } from './feature/subscription/subscription.module';
 
 @Module({
   imports: [
@@ -77,6 +78,7 @@ import { CommonModule } from './common/common.module';
     CronModule,
     ActivityModule,
     CommonModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [

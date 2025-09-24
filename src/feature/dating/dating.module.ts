@@ -12,6 +12,7 @@ import { ProfileInteraction } from '../user/entities/profile/profile-interaction
 import { Match } from '../../common/entities/match.entity';
 import { AuthModule } from '../auth/auth.module';
 import { ChatModule } from '../chat/chat.module';
+import { SubscriptionModule } from '../subscription/subscription.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ChatModule } from '../chat/chat.module';
     ChatModule,
     NotificationModule,
     ActivityModule,
+    SubscriptionModule,
   ],
   controllers: [DatingController],
   providers: [DatingService, InteractionService, MatchTimerService],
