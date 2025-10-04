@@ -237,8 +237,8 @@ export class MatchTimerService {
 
       // Check if chat exists and has messages
       const matchId = this.generateMatchId(
-        match.sourceProfileId,
-        match.targetProfileId,
+        match.sourceUser.id,
+        match.targetUser.id,
         ProfileType.DATE,
       );
       const chat = await this.chatService.getChatByMatchId(matchId);

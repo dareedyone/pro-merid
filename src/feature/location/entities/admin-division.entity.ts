@@ -21,7 +21,7 @@ export class AdministrativeDivision extends BaseSingleEntity {
   centroidCoordinates?: object; // GeoJSON Point
 
   @Property({
-    items: () => AdminDivisionType,
+    type: 'string',
     default: AdminDivisionType.STATE,
   })
   type!: AdminDivisionType;

@@ -19,6 +19,7 @@ import { GeoPoint } from '../entities/base-location-profile.entity';
 import { BaseProfileFilter } from '../entities/base.profile-filter';
 import { DatingLocationProfile } from '../../feature/dating/entities/dating-location.profile';
 import { FriendProfile } from '../../feature/friends/entities/friend.profile';
+import { AuthenticatedUser } from '../types/request.types';
 
 type MediaProfileField = 'datingLocationProfile' | 'friendProfile';
 
@@ -40,11 +41,20 @@ export abstract class BaseProfileService {
     private readonly regionRepo: EntityRepository<Region>,
   ) {}
 
-  abstract addProfile(authId: string, dto: CreateProfileDto): Promise<void>;
-  abstract updateProfile(authId: string, dto: UpdateProfileDto): Promise<void>;
-  abstract updateFilter(authId: string, dto: UpdateFilterDto): Promise<void>;
+  abstract addProfile(
+    authUser: AuthenticatedUser,
+    dto: CreateProfileDto,
+  ): Promise<void>;
+  abstract updateProfile(
+    authUser: AuthenticatedUser,
+    dto: UpdateProfileDto,
+  ): Promise<void>;
+  abstract updateFilter(
+    authUser: AuthenticatedUser,
+    dto: UpdateFilterDto,
+  ): Promise<void>;
   abstract findPotentialMatches<T = unknown>(
-    authId: string,
+    authUser: AuthenticatedUser,
     profileId?: string,
   ): Promise<T[]>;
 

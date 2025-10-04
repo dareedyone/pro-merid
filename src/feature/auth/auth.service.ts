@@ -11,7 +11,6 @@ import { randomInt } from 'crypto';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { Auth } from './entities/auth.entity';
 import { User } from '../user/entities/user/user.entity';
-import { Anchor } from '../user/entities/user/anchor.entity';
 import { EmailQueueService } from 'src/system/queue/email/email.qservice';
 import {
   AuthResponseType,
@@ -24,6 +23,7 @@ import { AppleAuthService } from './apple-auth.service';
 import { OAuthSignInDto } from './dto/oauth-signin.dto';
 import { PushTokenDto } from './dto/push-token.dto';
 import { OrmHelperService } from 'src/common/services/orm-helper.service';
+import { IssueTokenPayload } from 'src/common/types/interface/auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -69,7 +69,12 @@ export class AuthService {
 
   private async handleAuthResponse(auth: Auth): Promise<AuthResponseType> {
     await this.em.persistAndFlush(auth);
-    const access_token = await this.issueToken(auth.id, auth.role);
+    const access_token = await this.issueToken({
+      sub: auth.id,
+      role: auth.role,
+      userId: auth.user?.id,
+      anchorId: auth.anchor?.id,
+    });
 
     const data: AuthResponseType = {
       access_token,
@@ -88,7 +93,7 @@ export class AuthService {
     let auth = await this.authRepo.findOne({ email });
 
     if (!auth) {
-      auth = this.authRepo.create({ email });
+      auth = this.authRepo.create({ email, role: UserType.USER });
     }
 
     if (!this.isTimeWithin(auth?.lastCodeSentAt, 60_000)) {
@@ -128,16 +133,27 @@ export class AuthService {
     return this.handleAuthResponse(auth);
   }
 
-  private async issueToken(sub: string, role = UserType.USER): Promise<string> {
-    return await this.jwtService.signAsync(
-      {
-        sub,
-        role,
-      },
-      {
-        expiresIn: '60 days',
-      },
-    );
+  private async issueToken({
+    sub,
+    role,
+    userId,
+    anchorId,
+  }: IssueTokenPayload): Promise<string> {
+    const payload: IssueTokenPayload = {
+      sub,
+      role,
+    };
+
+    if (anchorId) {
+      payload.anchorId = anchorId;
+    }
+    if (userId) {
+      payload.userId = userId;
+    }
+
+    return await this.jwtService.signAsync(payload, {
+      expiresIn: '60 days',
+    });
   }
 
   async oauthLogin(dto: OAuthSignInDto): Promise<AuthResponseType> {
@@ -157,6 +173,7 @@ export class AuthService {
     let auth = await this.authRepo.findOne({ email: res.email });
     if (!auth) {
       auth = this.authRepo.create({
+        role: UserType.USER,
         email: res.email,
         ...(provider === 'google'
           ? { googleId: res.sub }

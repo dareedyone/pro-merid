@@ -9,13 +9,15 @@ import {
 import { User } from './user.entity';
 import { Auth } from '../../../auth/entities/auth.entity';
 import { BaseTimeEntity } from 'src/common/entities/base.entity';
+import { AnchorStatus } from 'src/feature/anchor/types/anchor.enum';
 
 @Entity()
 export class Anchor extends BaseTimeEntity {
   @OneToOne(() => Auth, (auth) => auth.user, {
     cascade: [Cascade.ALL],
+    nullable: true,
   })
-  auth!: Auth;
+  auth?: Auth;
 
   @Property()
   name!: string;
@@ -26,6 +28,9 @@ export class Anchor extends BaseTimeEntity {
   @Property({ type: 'json', nullable: true })
   config?: Record<string, any>; // logo, colors, settings, etc.
 
+  @Property({ type: 'enum' })
+  status: AnchorStatus = AnchorStatus.ACTIVE;
+
   @OneToMany(() => User, (user) => user.anchor)
   users = new Collection<User>(this);
 
@@ -34,4 +39,7 @@ export class Anchor extends BaseTimeEntity {
 
   @Property()
   createdAt = new Date();
+
+  @Property()
+  updatedAt = new Date();
 }

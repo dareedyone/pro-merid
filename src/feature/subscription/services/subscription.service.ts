@@ -20,6 +20,7 @@ import {
   SubscriptionStatus,
 } from '../dtos/subscription.dto';
 import { ProfileType } from 'src/common/types/enums/other.enum';
+import { AuthenticatedUser } from 'src/common/types/request.types';
 
 @Injectable()
 export class SubscriptionService {
@@ -98,17 +99,21 @@ export class SubscriptionService {
   }
 
   async purchaseSubscription(
-    authId: string,
+    authUser: AuthenticatedUser,
     dto: PurchaseSubscriptionDto,
   ): Promise<SubscriptionStatusDto> {
-    return this.processSubscription(authId, dto, SubscriptionAction.PURCHASED);
+    return this.processSubscription(
+      authUser,
+      dto,
+      SubscriptionAction.PURCHASED,
+    );
   }
 
   async getSubscriptionStatus(
-    authId: string,
+    authUser: AuthenticatedUser,
     profileType: ProfileType,
   ): Promise<SubscriptionStatusDto> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     if (profileType === ProfileType.DATE) {
       return this.getDatingSubscriptionStatus(user);
@@ -120,20 +125,19 @@ export class SubscriptionService {
   }
 
   async renewSubscription(
-    authId: string,
+    authUser: AuthenticatedUser,
     dto: RenewSubscriptionDto,
   ): Promise<SubscriptionStatusDto> {
-    return this.processSubscription(authId, dto, SubscriptionAction.RENEWED);
+    return this.processSubscription(authUser, dto, SubscriptionAction.RENEWED);
   }
 
-  async processSubscription(
-    authId: string,
+  private async processSubscription(
+    authUser: AuthenticatedUser,
     dto: PurchaseSubscriptionDto | RenewSubscriptionDto,
     action: SubscriptionAction,
   ): Promise<SubscriptionStatusDto> {
     try {
-      const { user } = await this.authService.fetchAuthUser(authId);
-
+      const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
       // Validate receipt data
       const isValidReceipt = await this.validateReceipt(
         dto.receiptData,
@@ -152,7 +156,7 @@ export class SubscriptionService {
           this.logger.warn(
             `Duplicate transaction detected: ${dto.transactionId}`,
           );
-          return this.getSubscriptionStatus(authId, dto.profileType);
+          return this.getSubscriptionStatus(authUser, dto.profileType);
         }
       }
 
@@ -182,13 +186,13 @@ export class SubscriptionService {
       await this.recordSubscriptionHistory(user, dto, expiresAt, action);
 
       this.logger.log(
-        `Successfully processed ${action} for user ${authId}, profile: ${dto.profileType}`,
+        `Successfully processed ${action} for user ${authUser.userId}, profile: ${dto.profileType}`,
       );
 
-      return this.getSubscriptionStatus(authId, dto.profileType);
+      return this.getSubscriptionStatus(authUser, dto.profileType);
     } catch (error) {
       this.logger.error(
-        `Error processing subscription ${action} for user ${authId}:`,
+        `Error processing subscription ${action} for user ${authUser.userId}:`,
         error,
       );
       throw error;
@@ -196,10 +200,10 @@ export class SubscriptionService {
   }
 
   async cancelSubscription(
-    authId: string,
+    authUser: AuthenticatedUser,
     dto: CancelSubscriptionDto,
   ): Promise<{ message: string }> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     if (dto.profileType === ProfileType.DATE) {
       await this.cancelDatingSubscription(user, dto.subscriptionType);
@@ -219,10 +223,10 @@ export class SubscriptionService {
   }
 
   async getSubscriptionHistory(
-    authId: string,
+    authUser: AuthenticatedUser,
     profileType: ProfileType,
   ): Promise<SubscriptionHistoryDto[]> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     const history = await this.subscriptionHistoryRepo.find(
       { user, profileType },
@@ -532,10 +536,7 @@ export class SubscriptionService {
   private async getDatingSubscriptionStatus(
     user: User,
   ): Promise<SubscriptionStatusDto> {
-    const datingProfile = await this.datingProfileRepo.findOne(
-      { user },
-      { populate: ['user'] },
-    );
+    const datingProfile = await this.datingProfileRepo.findOne({ user });
 
     const noSubscription = {
       profileType: ProfileType.DATE,
@@ -587,10 +588,7 @@ export class SubscriptionService {
   private async getFriendSubscriptionStatus(
     user: User,
   ): Promise<SubscriptionStatusDto> {
-    const friendProfile = await this.friendProfileRepo.findOne(
-      { user },
-      { populate: ['user'] },
-    );
+    const friendProfile = await this.friendProfileRepo.findOne({ user });
 
     if (!friendProfile) {
       return {

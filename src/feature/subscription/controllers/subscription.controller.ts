@@ -37,8 +37,11 @@ export class SubscriptionController {
     @Req() req: Request,
     @Query('profileType') profileType: ProfileType,
   ): Promise<SubscriptionStatusDto> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.getSubscriptionStatus(authId, profileType);
+    const authUser = req?.user;
+    return this.subscriptionService.getSubscriptionStatus(
+      authUser,
+      profileType,
+    );
   }
 
   @Post('purchase')
@@ -46,8 +49,8 @@ export class SubscriptionController {
     @Req() req: Request,
     @Body() dto: PurchaseSubscriptionDto,
   ): Promise<SubscriptionStatusDto> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.purchaseSubscription(authId, dto);
+    const authUser = req?.user;
+    return this.subscriptionService.purchaseSubscription(authUser, dto);
   }
 
   @Post('renew')
@@ -55,8 +58,8 @@ export class SubscriptionController {
     @Req() req: Request,
     @Body() dto: RenewSubscriptionDto,
   ): Promise<SubscriptionStatusDto> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.renewSubscription(authId, dto);
+    const authUser = req?.user;
+    return this.subscriptionService.renewSubscription(authUser, dto);
   }
 
   @Post('cancel')
@@ -64,8 +67,8 @@ export class SubscriptionController {
     @Req() req: Request,
     @Body() dto: CancelSubscriptionDto,
   ): Promise<{ message: string }> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.cancelSubscription(authId, dto);
+    const authUser = req?.user;
+    return this.subscriptionService.cancelSubscription(authUser, dto);
   }
 
   @Get('history')
@@ -73,7 +76,10 @@ export class SubscriptionController {
     @Req() req: Request,
     @Query('profileType') profileType: ProfileType,
   ): Promise<SubscriptionHistoryDto[]> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.getSubscriptionHistory(authId, profileType);
+    const authUser = req?.user;
+    return this.subscriptionService.getSubscriptionHistory(
+      authUser,
+      profileType,
+    );
   }
 }

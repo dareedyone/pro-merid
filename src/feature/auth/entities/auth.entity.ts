@@ -1,7 +1,7 @@
 import { Entity, Property, Unique, OneToOne, Enum } from '@mikro-orm/core';
 import { User } from '../../user/entities/user/user.entity';
 import { UserType } from 'src/common/types/enums/user.enum';
-import { Anchor } from 'src/feature/user/entities/user/anchor.entity';
+import { Anchor } from 'src/feature/anchor/entities/anchor.entity';
 import { BaseTimeEntity } from 'src/common/entities/base.entity';
 
 @Entity()
@@ -29,7 +29,7 @@ export class Auth extends BaseTimeEntity {
   lastCodeSentAt?: Date;
 
   @Property({ type: 'text' })
-  role?: UserType;
+  role: UserType;
 
   @Property({ nullable: true })
   pushToken?: string;

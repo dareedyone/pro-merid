@@ -56,14 +56,14 @@ export abstract class BaseProfileController {
 
   @Post()
   createProfile(@Req() req: Request, @Body() dto: CreateProfileDto) {
-    const authId = req?.user?.sub;
-    return this.profileService.addProfile(authId, dto);
+    const authUser = req?.user;
+    return this.profileService.addProfile(authUser, dto);
   }
 
   @Patch()
   updateProfile(@Req() req: Request, @Body() dto: UpdateProfileDto) {
-    const authId = req?.user?.sub;
-    return this.profileService.updateProfile(authId, dto);
+    const authUser = req?.user;
+    return this.profileService.updateProfile(authUser, dto);
   }
 
   @Patch('filter')
@@ -71,8 +71,8 @@ export abstract class BaseProfileController {
     if (!this.profileService.updateFilter) {
       throw new Error('Filter management not supported for this profile type');
     }
-    const authId = req?.user?.sub;
-    return this.profileService.updateFilter(authId, dto);
+    const authUser = req?.user;
+    return this.profileService.updateFilter(authUser, dto);
   }
 
   @Get('matches/potential')
@@ -83,8 +83,11 @@ export abstract class BaseProfileController {
     if (!this.profileService.findPotentialMatches) {
       throw new Error('Potential matches not supported for this profile type');
     }
-    const authId = req?.user?.sub;
-    return this.profileService.findPotentialMatches(authId, locationProfileId);
+    const authUser = req?.user;
+    return this.profileService.findPotentialMatches(
+      authUser,
+      locationProfileId,
+    );
   }
 
   @Post('interactions')
@@ -92,14 +95,14 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Body() dto: CreateInteractionDto,
   ) {
-    const authId = req?.user?.sub;
-    return await this.interactionService.createInteraction(authId, dto);
+    const authUser = req?.user;
+    return await this.interactionService.createInteraction(authUser, dto);
   }
 
   @Post('interactions/unmatch')
   async unmatch(@Req() req: Request, @Body() dto: UnmatchDto) {
-    const authId = req?.user?.sub;
-    return await this.interactionService.unmatch(authId, dto);
+    const authUser = req?.user;
+    return await this.interactionService.unmatch(authUser, dto);
   }
 
   @Get('interactions/history')
@@ -107,9 +110,9 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Query() query: PaginationQueryDto,
   ) {
-    const authId = req?.user?.sub;
+    const authUser = req?.user;
     return await this.interactionService.getInteractionHistory(
-      authId,
+      authUser,
       this.profileType,
       query.page,
       query.limit,
@@ -118,15 +121,15 @@ export abstract class BaseProfileController {
 
   @Get('interactions/matches')
   async getMatches(@Req() req: Request) {
-    const authId = req?.user?.sub;
-    return await this.interactionService.getMatches(authId, this.profileType);
+    const authUser = req?.user;
+    return await this.interactionService.getMatches(authUser, this.profileType);
   }
 
   @Get('interactions/daily-count')
   async getDailyCount(@Req() req: Request, @Query() query: DailyCountQueryDto) {
-    const authId = req?.user?.sub;
+    const authUser = req?.user;
     return await this.interactionService.getDailyInteractionCount(
-      authId,
+      authUser,
       query.type,
       this.profileType,
     );
@@ -138,10 +141,9 @@ export abstract class BaseProfileController {
     @Param('targetUserId') targetUserId: string,
     @Query() query: CheckInteractionQueryDto,
   ) {
-    const authId = req?.user?.sub;
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const authUser = req?.user;
     return await this.interactionService.hasInteraction(
-      user.id,
+      authUser.userId!,
       targetUserId,
       query.type,
       this.profileType,
@@ -153,10 +155,9 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Param('targetUserId') targetUserId: string,
   ) {
-    const authId = req?.user?.sub;
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const authUser = req?.user;
     return await this.interactionService.getInteractionsBetweenUsers(
-      user.id,
+      authUser.userId!,
       targetUserId,
     );
   }
@@ -166,9 +167,11 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Param('targetUserId') targetUserId: string,
   ) {
-    const authId = req?.user?.sub;
-    const { user } = await this.authService.fetchAuthUser(authId);
-    return await this.interactionService.areUsersMatched(user.id, targetUserId);
+    const authUser = req?.user;
+    return await this.interactionService.areUsersMatched(
+      authUser.userId!,
+      targetUserId,
+    );
   }
 
   @Post('interactions/rematch/request')
@@ -176,8 +179,8 @@ export abstract class BaseProfileController {
     if (!this.interactionService.requestRematch) {
       throw new Error('Re-match not supported for this profile type');
     }
-    const authId = req?.user?.sub;
-    return await this.interactionService.requestRematch(authId, dto);
+    const authUser = req?.user;
+    return await this.interactionService.requestRematch(authUser, dto);
   }
 
   @Post('interactions/rematch/respond')
@@ -185,8 +188,8 @@ export abstract class BaseProfileController {
     if (!this.interactionService.respondToRematch) {
       throw new Error('Re-match not supported for this profile type');
     }
-    const authId = req?.user?.sub;
-    return await this.interactionService.respondToRematch(authId, dto);
+    const authUser = req?.user;
+    return await this.interactionService.respondToRematch(authUser, dto);
   }
 
   // Subscription endpoints
@@ -197,9 +200,14 @@ export abstract class BaseProfileController {
   }
 
   @Get('subscription/status')
-  async getSubscriptionStatus(@Req() req: Request): Promise<SubscriptionStatusDto> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.getSubscriptionStatus(authId, this.profileType);
+  async getSubscriptionStatus(
+    @Req() req: Request,
+  ): Promise<SubscriptionStatusDto> {
+    const authUser = req?.user;
+    return this.subscriptionService.getSubscriptionStatus(
+      authUser,
+      this.profileType,
+    );
   }
 
   @Post('subscription/purchase')
@@ -207,8 +215,8 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Body() dto: Omit<PurchaseSubscriptionDto, 'profileType'>,
   ): Promise<SubscriptionStatusDto> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.purchaseSubscription(authId, {
+    const authUser = req?.user;
+    return this.subscriptionService.purchaseSubscription(authUser, {
       ...dto,
       profileType: this.profileType,
     });
@@ -219,8 +227,8 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Body() dto: Omit<RenewSubscriptionDto, 'profileType'>,
   ): Promise<SubscriptionStatusDto> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.renewSubscription(authId, {
+    const authUser = req?.user;
+    return this.subscriptionService.renewSubscription(authUser, {
       ...dto,
       profileType: this.profileType,
     });
@@ -231,8 +239,8 @@ export abstract class BaseProfileController {
     @Req() req: Request,
     @Body() dto: Omit<CancelSubscriptionDto, 'profileType'>,
   ): Promise<{ message: string }> {
-    const authId = req?.user?.sub;
-    return this.subscriptionService.cancelSubscription(authId, {
+    const authUser = req?.user;
+    return this.subscriptionService.cancelSubscription(authUser, {
       ...dto,
       profileType: this.profileType,
     });

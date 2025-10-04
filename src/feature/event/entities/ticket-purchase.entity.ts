@@ -1,5 +1,5 @@
 import { Entity, Property, ManyToOne } from '@mikro-orm/core';
-import { User } from 'db/postgres/entity/user/user.entity';
+import { User } from 'src/feature/user/entities/user/user.entity';
 
 import { BaseTimeEntity } from 'src/common/entities/base.entity';
 import { TicketType } from './ticket-type.entity';

@@ -84,7 +84,7 @@ export class ChatService {
 
     const chats = await this.chatModel
       .find({
-        participantIds: userId,
+        participantIds: { $in: [userId] },
         profileType,
         status: { $ne: ChatStatus.DELETED },
       })
@@ -94,7 +94,7 @@ export class ChatService {
       .exec();
 
     const total = await this.chatModel.countDocuments({
-      participantIds: userId,
+      participantIds: { $in: [userId] },
       profileType,
       status: { $ne: ChatStatus.DELETED },
     });
@@ -140,7 +140,7 @@ export class ChatService {
   async getChat(chatId: string, userId: string): Promise<ChatResponseDto> {
     const chat = await this.chatModel.findOne({
       _id: chatId,
-      participantIds: userId,
+      participantIds: { $in: [userId] },
       status: { $ne: ChatStatus.DELETED },
     });
 
@@ -185,7 +185,7 @@ export class ChatService {
     } else {
       chat = await this.chatModel.findOne({
         _id: sendMessageDto.chatId,
-        participantIds: userId,
+        participantIds: { $in: [userId] },
         status: ChatStatus.ACTIVE,
       });
 
@@ -261,7 +261,7 @@ export class ChatService {
   ): Promise<MessageListResponseDto> {
     const chat = await this.chatModel.findOne({
       _id: chatId,
-      participantIds: userId,
+      participantIds: { $in: [userId] },
       status: { $ne: ChatStatus.DELETED },
     });
 
@@ -306,7 +306,7 @@ export class ChatService {
   ): Promise<void> {
     const chat = await this.chatModel.findOne({
       _id: chatId,
-      participantIds: userId,
+      participantIds: { $in: [userId] },
       status: { $ne: ChatStatus.DELETED },
     });
 
@@ -348,7 +348,7 @@ export class ChatService {
   async deleteChat(chatId: string, userId: string): Promise<void> {
     const chat = await this.chatModel.findOne({
       _id: chatId,
-      participantIds: userId,
+      participantIds: { $in: [userId] },
     });
 
     if (!chat) {
@@ -368,7 +368,7 @@ export class ChatService {
   async archiveChat(chatId: string, userId: string): Promise<void> {
     const chat = await this.chatModel.findOne({
       _id: chatId,
-      participantIds: userId,
+      participantIds: { $in: [userId] },
       status: ChatStatus.ACTIVE,
     });
 
@@ -388,6 +388,29 @@ export class ChatService {
     );
   }
 
+  async unarchiveChat(chatId: string, userId: string): Promise<void> {
+    const chat = await this.chatModel.findOne({
+      _id: chatId,
+      participantIds: { $in: [userId] },
+      status: ChatStatus.ARCHIVED,
+    });
+
+    if (!chat) {
+      throw new NotFoundException('Archived chat not found or access denied');
+    }
+
+    await this.chatModel.updateOne(
+      { _id: chatId },
+      {
+        $set: {
+          status: ChatStatus.ACTIVE,
+          archivedAt: null,
+          archivedBy: null,
+        },
+      },
+    );
+  }
+
   async blockChat(
     chatId: string,
     userId: string,
@@ -395,7 +418,7 @@ export class ChatService {
   ): Promise<void> {
     const chat = await this.chatModel.findOne({
       _id: chatId,
-      participantIds: userId,
+      participantIds: { $in: [userId] },
       status: { $ne: ChatStatus.DELETED },
     });
 

@@ -1,12 +1,4 @@
-// src/support-chat/dto/create-support-message.dto.ts
-
-import {
-  IsEnum,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateSupportMessageDto {
   @IsEnum(['user', 'agent', 'system'])

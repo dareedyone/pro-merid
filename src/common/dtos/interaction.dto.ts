@@ -4,6 +4,7 @@ import {
   ProfileType,
   UnmatchReason,
   InteractionEventType,
+  RematchStatus,
 } from '../types/enums/other.enum';
 
 export class CreateInteractionDto {
@@ -74,7 +75,7 @@ export class InteractionResponseDto {
   // Rematch context for chat display
   rematchContext?: {
     message: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'expired';
+    status: RematchStatus;
     requestedAt: Date;
     requestedBy: string;
     respondedAt?: Date;
@@ -115,7 +116,7 @@ export class RematchRequestDto {
 
 export class RematchResponseDto {
   @IsString()
-  matchId!: string;
+  matchId!: string; // The constructed match ID for lookup
 
   @IsString()
   @IsEnum(['accept', 'reject'])
@@ -124,7 +125,7 @@ export class RematchResponseDto {
 
 export class RematchRequestResponseDto {
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
-  matchId?: string;
+  matchId?: string; // The constructed match ID for lookup
   message?: string;
   chatId?: string; // If accepted
 }

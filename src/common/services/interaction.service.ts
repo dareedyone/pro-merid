@@ -9,6 +9,7 @@ import {
   InteractionType,
   ProfileType,
   InteractionEventType,
+  RematchStatus,
 } from '../types/enums/other.enum';
 import { ChatService } from '../../feature/chat/chat.service';
 import {
@@ -23,6 +24,7 @@ import {
   RematchRequestDto,
   RematchResponseDto,
 } from '../dtos/interaction.dto';
+import { AuthenticatedUser } from '../types/request.types';
 
 export interface MatchEventPayload {
   event: InteractionEventType;
@@ -76,11 +78,11 @@ export class InteractionService {
     sourceUserId: string,
     targetUserId: string,
   ): Promise<Match> {
-    let match = await this.matchRepo.findOne({ id: matchId });
+    let match = await this.matchRepo.findOne({ matchId });
 
     if (!match) {
       match = this.matchRepo.create({
-        id: matchId,
+        matchId,
         profileType,
         matchedAt,
         sourceUserId,
@@ -94,10 +96,12 @@ export class InteractionService {
   }
 
   async createInteraction(
-    authId: string,
+    authUser: AuthenticatedUser,
     dto: CreateInteractionDto,
   ): Promise<InteractionResponseDto> {
-    const { user: sourceUser } = await this.authService.fetchAuthUser(authId);
+    const sourceUser = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
     const targetUser = await this.userRepo.findOneOrFail({
       id: dto.targetUserId,
     });
@@ -231,8 +235,13 @@ export class InteractionService {
     });
   }
 
-  async unmatch(authId: string, dto: UnmatchDto): Promise<{ message: string }> {
-    const { user: sourceUser } = await this.authService.fetchAuthUser(authId);
+  async unmatch(
+    authUser: AuthenticatedUser,
+    dto: UnmatchDto,
+  ): Promise<{ message: string }> {
+    const sourceUser = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
     const targetUserId = dto.targetUserId;
     const profileType = dto.profileType;
 
@@ -243,7 +252,7 @@ export class InteractionService {
     );
 
     const match = await this.matchRepo.findOneOrFail({
-      id: matchId,
+      matchId,
       $or: [{ sourceUserId: sourceUser.id }, { targetUserId: sourceUser.id }],
     });
 
@@ -271,12 +280,14 @@ export class InteractionService {
   }
 
   async getInteractionHistory(
-    authId: string,
+    authUser: AuthenticatedUser,
     profileType: ProfileType,
     page: number = 1,
     limit: number = 20,
   ): Promise<InteractionResponseDto[]> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
     const offset = (page - 1) * limit;
 
     const interactions = await this.profileInteractionRepo.find(
@@ -298,10 +309,12 @@ export class InteractionService {
   }
 
   async getMatches(
-    authId: string,
+    authUser: AuthenticatedUser,
     profileType: ProfileType,
   ): Promise<MatchResponseDto[]> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
 
     const matches = await this.profileInteractionRepo.find(
       {
@@ -319,11 +332,13 @@ export class InteractionService {
   }
 
   async getDailyInteractionCount(
-    authId: string,
+    authUser: AuthenticatedUser,
     type: InteractionType,
     profileType: ProfileType,
   ): Promise<number> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -394,18 +409,179 @@ export class InteractionService {
     };
   }
 
-  async requestRematch?(
-    _authId: string,
-    _dto: RematchRequestDto,
+  async requestRematch(
+    authUser: AuthenticatedUser,
+    dto: RematchRequestDto,
   ): Promise<{ message: string }> {
-    throw new Error('requestRematch not supported for this profile type');
+    const sourceUser = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
+    const targetUser = await this.userRepo.findOneOrFail({
+      id: dto.targetUserId,
+    });
+
+    const matchId = this.generateMatchId(
+      sourceUser.id,
+      targetUser.id,
+      dto.profileType,
+    );
+
+    const match = await this.matchRepo.findOne({
+      matchId,
+      isUnmatched: true,
+      $or: [{ sourceUserId: sourceUser.id }, { targetUserId: sourceUser.id }],
+    });
+
+    if (!match) {
+      throw new Error('No unmatched relationship found between these users');
+    }
+
+    if (match.rematchContext?.status === RematchStatus.PENDING) {
+      throw new Error('A rematch request is already pending');
+    }
+
+    if (match.rematchContext?.status === RematchStatus.REJECTED) {
+      throw new Error(
+        'You cannot request a rematch because the previous rematch was rejected.',
+      );
+    }
+
+    const rematchContext = {
+      message: dto.message,
+      status: RematchStatus.PENDING,
+      requestedAt: new Date(),
+      requestedBy: sourceUser.id,
+    };
+
+    match.rematchContext = rematchContext;
+
+    this.addMatchEvent(match, {
+      event: InteractionEventType.REMATCH_REQUEST,
+      initiatedBy: sourceUser.id,
+      metadata: {
+        message: dto.message,
+      },
+    });
+
+    await this.em.persistAndFlush(match);
+
+    setImmediate(async () => {
+      try {
+        await this.notificationService.sendNotification({
+          userId: targetUser.id,
+          type: NotificationType.REMATCH_REQUEST,
+          data: {
+            fromUserId: sourceUser.id,
+            fromUserName: sourceUser.firstName,
+            message: dto.message,
+            matchId: matchId,
+          },
+        });
+      } catch (error) {
+        this.logger.error(
+          'Failed to send rematch request notification:',
+          error,
+        );
+      }
+    });
+
+    return { message: 'Rematch request sent successfully' };
   }
 
-  async respondToRematch?(
-    _authId: string,
-    _dto: RematchResponseDto,
-  ): Promise<{ message: string }> {
-    throw new Error('respondToRematch not supported for this profile type');
+  async respondToRematch(
+    authUser: AuthenticatedUser,
+    dto: RematchResponseDto,
+  ): Promise<{ message: string; chatId?: string }> {
+    const targetUser = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
+
+    const match = await this.matchRepo.findOne({
+      matchId: dto.matchId,
+      isUnmatched: true,
+      $or: [{ sourceUserId: targetUser.id }, { targetUserId: targetUser.id }],
+    });
+
+    if (
+      !match?.rematchContext ||
+      match.rematchContext.status !== RematchStatus.PENDING
+    ) {
+      throw new Error('No pending rematch request found');
+    }
+
+    const requesterId = match.rematchContext?.requestedBy;
+
+    const isRequestedByCurrentUser = requesterId === targetUser.id;
+
+    if (isRequestedByCurrentUser) {
+      throw new Error('You cannot respond to your own rematch request');
+    }
+
+    const now = new Date();
+    match.rematchContext = {
+      ...match.rematchContext,
+      status:
+        dto.action === 'accept'
+          ? RematchStatus.ACCEPTED
+          : RematchStatus.REJECTED,
+      respondedAt: now,
+      respondedBy: targetUser.id,
+    };
+
+    this.addMatchEvent(match, {
+      event:
+        dto.action === 'accept'
+          ? InteractionEventType.REMATCH_ACCEPTED
+          : InteractionEventType.REMATCH_REJECTED,
+      initiatedBy: targetUser.id,
+    });
+
+    let chatId: string | undefined;
+
+    if (dto.action === 'accept') {
+      match.isUnmatched = false;
+      match.unmatchedAt = undefined;
+      match.unmatchedBy = undefined;
+      match.unmatchReason = undefined;
+      match.unmatchMessage = undefined;
+
+      await this.chatService.unarchiveChat(dto.matchId, targetUser.id);
+    }
+
+    await this.em.persistAndFlush(match);
+
+    if (requesterId) {
+      setImmediate(async () => {
+        try {
+          await this.notificationService.sendNotification({
+            userId: requesterId,
+            type:
+              dto.action === 'accept'
+                ? NotificationType.REMATCH_ACCEPTED
+                : NotificationType.REMATCH_REJECTED,
+            data: {
+              fromUserId: targetUser.id,
+              fromUserName: targetUser.firstName,
+              message: dto.action,
+              chatId: chatId,
+            },
+          });
+        } catch (error) {
+          this.logger.error(
+            'Failed to send rematch response notification:',
+            error,
+          );
+        }
+      });
+    }
+
+    return {
+      message:
+        dto.action === 'accept'
+          ? 'Rematch accepted successfully'
+          : 'Rematch request rejected',
+      chatId,
+    };
   }
 
   private async archiveChatForUnmatch(

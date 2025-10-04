@@ -12,10 +12,6 @@ import {
   CreateDatingRelationshipDto,
   UpdateDatingRelationshipDto,
 } from './dto/dating-relationship.dto';
-// import {
-//   RematchRequestDto,
-//   RematchResponseDto,
-// } from '../../common/dtos/interaction.dto';
 import { CreateLocationProfileDto } from '../../common/dtos/base-location-profile.dto';
 import {
   CreateLocationProfileMediaDto,
@@ -45,8 +41,8 @@ export class DatingController extends BaseProfileController {
     @Req() req: Request,
     @Body() dto: CreateDatingPersonalityDto,
   ) {
-    const authId = req?.user?.sub;
-    return this.datingService.addPersonality(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.addPersonality(authUser, dto);
   }
 
   @Patch('personality')
@@ -54,8 +50,8 @@ export class DatingController extends BaseProfileController {
     @Req() req: Request,
     @Body() dto: UpdateDatingPersonalityDto,
   ) {
-    const authId = req?.user?.sub;
-    return this.datingService.updatePersonality(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.updatePersonality(authUser, dto);
   }
 
   @Post('relationship')
@@ -63,8 +59,8 @@ export class DatingController extends BaseProfileController {
     @Req() req: Request,
     @Body() dto: CreateDatingRelationshipDto,
   ) {
-    const authId = req?.user?.sub;
-    return this.datingService.addRelationship(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.addRelationship(authUser, dto);
   }
 
   @Patch('relationship')
@@ -72,8 +68,8 @@ export class DatingController extends BaseProfileController {
     @Req() req: Request,
     @Body() dto: UpdateDatingRelationshipDto,
   ) {
-    const authId = req?.user?.sub;
-    return this.datingService.updateRelationship(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.updateRelationship(authUser, dto);
   }
 
   @Post('location-profile')
@@ -81,8 +77,8 @@ export class DatingController extends BaseProfileController {
     @Req() req: Request,
     @Body() dto: CreateLocationProfileDto,
   ) {
-    const authId = req?.user?.sub;
-    return this.datingService.addLocationProfile(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.addLocationProfile(authUser, dto);
   }
 
   @Post('location-profile/media')
@@ -90,36 +86,19 @@ export class DatingController extends BaseProfileController {
     @Req() req: Request,
     @Body() dto: CreateLocationProfileMediaDto,
   ) {
-    const authId = req?.user?.sub;
-    return this.datingService.addLocationProfileMedia(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.addLocationProfileMedia(authUser, dto);
   }
 
   @Patch('location-profile/media')
   updateLocationProfileMedia(@Req() req: Request, @Body() dto: UpdateMediaDto) {
-    const authId = req?.user?.sub;
-    return this.datingService.updateLocationProfileMedia(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.updateLocationProfileMedia(authUser, dto);
   }
 
   @Delete('location-profile/media')
   removeLocationProfileMedia(@Req() req: Request, @Body() dto: RemoveMediaDto) {
-    const authId = req?.user?.sub;
-    return this.datingService.removeLocationProfileMedia(authId, dto);
+    const authUser = req?.user;
+    return this.datingService.removeLocationProfileMedia(authUser, dto);
   }
-
-  // @Post('interactions/rematch/request')
-  // async requestRematch(@Req() req: Request, @Body() _dto: RematchRequestDto) {
-  //   const _authId = req?.user?.sub;
-  //   // TODO: Implement rematch logic in InteractionService if needed
-  //   throw new Error('Rematch not yet implemented in unified service');
-  // }
-
-  // @Post('interactions/rematch/respond')
-  // async respondToRematch(
-  //   @Req() req: Request,
-  //   @Body() _dto: RematchResponseDto,
-  // ) {
-  //   const _authId = req?.user?.sub;
-  //   // TODO: Implement rematch logic in InteractionService if needed
-  //   throw new Error('Rematch not yet implemented in unified service');
-  // }
 }

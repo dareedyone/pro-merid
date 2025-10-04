@@ -7,7 +7,7 @@ import { AuthController } from './auth.controller';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Auth } from './entities/auth.entity';
 import { User } from '../user/entities/user/user.entity';
-import { Anchor } from '../user/entities/user/anchor.entity';
+import { Anchor } from '../anchor/entities/anchor.entity';
 import { GoogleAuthService } from './google-auth.service';
 import { AppleAuthService } from './apple-auth.service';
 import { EmailQueueService } from 'src/system/queue/email/email.qservice';

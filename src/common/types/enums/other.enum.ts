@@ -56,3 +56,10 @@ export enum InteractionEventType {
   UNMATCH = 'unmatch',
   REMATCH_REQUEST = 'rematch_request',
 }
+
+export enum RematchStatus {
+  PENDING = 'pending',
+  ACCEPTED = 'accepted',
+  REJECTED = 'rejected',
+  EXPIRED = 'expired',
+}

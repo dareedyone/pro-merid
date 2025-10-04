@@ -31,7 +31,7 @@ import { Interest } from './character/interest.entity';
 import { Country } from '../../../location/entities/country.entity';
 import { FriendProfile } from '../../../friends/entities/friend.profile';
 // import { RangeEmb } from 'src/common/entities/range.emb';
-import { Anchor } from './anchor.entity';
+import { Anchor } from '../../../anchor/entities/anchor.entity';
 import { DatingProfile } from 'src/feature/dating/entities/dating.profile';
 
 @Entity()

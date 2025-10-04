@@ -2,7 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { AuthService } from '../../auth/auth.service';
-import { User as _User } from '../../user/entities/user/user.entity';
+import { User as _User, User } from '../../user/entities/user/user.entity';
 import {
   CreateFriendProfileDto,
   UpdateFriendProfileDto,
@@ -18,10 +18,13 @@ import { UploadPictureResponseObjType } from '../../../common/types/interface';
 import { GeoFallbackService } from '../../location/geo-fallback.service';
 import { Country } from '../../location/entities/country.entity';
 import { Region } from '../../location/entities/region.entity';
+import { AuthenticatedUser } from 'src/common/types/request.types';
 
 @Injectable()
 export class FriendsService extends BaseProfileService {
   constructor(
+    @InjectRepository(User)
+    private readonly userRepo: EntityRepository<User>,
     @InjectRepository(FriendProfile)
     private readonly friendProfileRepo: EntityRepository<FriendProfile>,
     @InjectRepository(FriendFilter)
@@ -46,8 +49,11 @@ export class FriendsService extends BaseProfileService {
     );
   }
 
-  async addProfile(authId: string, dto: CreateFriendProfileDto): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+  async addProfile(
+    authUser: AuthenticatedUser,
+    dto: CreateFriendProfileDto,
+  ): Promise<void> {
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     const existingProfile = await this.friendProfileRepo.findOne({ user });
     if (existingProfile) {
@@ -78,10 +84,10 @@ export class FriendsService extends BaseProfileService {
   }
 
   async updateProfile(
-    authId: string,
+    authUser: AuthenticatedUser,
     dto: UpdateFriendProfileDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     const friendProfile = await this.friendProfileRepo.findOneOrFail({ user });
 
@@ -99,10 +105,10 @@ export class FriendsService extends BaseProfileService {
   }
 
   async updateFilter(
-    authId: string,
+    authUser: AuthenticatedUser,
     dto: UpdateFriendFilterDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     const friendProfile = await this.friendProfileRepo.findOneOrFail(
       { user },
@@ -132,8 +138,10 @@ export class FriendsService extends BaseProfileService {
     await this.em.flush();
   }
 
-  async findPotentialMatches<T = FriendProfile>(authId: string): Promise<T[]> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+  async findPotentialMatches<T = FriendProfile>(
+    authUser: AuthenticatedUser,
+  ): Promise<T[]> {
+    const user = await this.userRepo.findOneOrFail({ id: authUser.userId });
 
     const friendProfile = await this.friendProfileRepo.findOneOrFail(
       { user },

@@ -25,6 +25,8 @@ import { CronModule } from './system/cron/cron.module';
 import { ActivityModule } from './feature/activity/activity.module';
 import { CommonModule } from './common/common.module';
 import { SubscriptionModule } from './feature/subscription/subscription.module';
+import { AnchorModule } from './feature/anchor/anchor.module';
+import { AdminModule } from './feature/admin/admin.module';
 
 @Module({
   imports: [
@@ -79,6 +81,8 @@ import { SubscriptionModule } from './feature/subscription/subscription.module';
     ActivityModule,
     CommonModule,
     SubscriptionModule,
+    AnchorModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [

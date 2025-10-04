@@ -60,6 +60,7 @@ import { RangeEmb } from 'src/common/entities/range.emb';
 import { GeoPoint } from 'src/common/entities/base-location-profile.entity';
 import { RhFactor } from 'src/common/types/enums/other.enum';
 import { User } from '../user/entities/user/user.entity';
+import { AuthenticatedUser } from 'src/common/types/request.types';
 
 interface CompatibilityScoreOptions {
   datingProfile: DatingProfile;
@@ -1061,10 +1062,13 @@ export class DatingService extends BaseProfileService {
   }
 
   async addProfile(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: CreateDatingProfileDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
+    const user = await this.userRepo.findOneOrFail({
+      id: authUser.userId!,
+    });
+
     const datingProfile = this.datingProfileRepo.create({
       ...payload,
       user,
@@ -1073,12 +1077,11 @@ export class DatingService extends BaseProfileService {
   }
 
   async updateProfile(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: UpdateDatingProfileDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
     const datingProfile = await this.datingProfileRepo.findOneOrFail({
-      user,
+      user: this.userRepo.getReference(authUser.userId!),
     });
 
     this.em.assign(datingProfile, payload);
@@ -1086,12 +1089,11 @@ export class DatingService extends BaseProfileService {
   }
 
   async addPersonality(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: CreateDatingPersonalityDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
     const datingProfile = await this.datingProfileRepo.findOneOrFail({
-      user,
+      user: this.userRepo.getReference(authUser.userId!),
     });
 
     if (datingProfile?.personality) {
@@ -1111,14 +1113,12 @@ export class DatingService extends BaseProfileService {
   }
 
   async updatePersonality(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: UpdateDatingPersonalityDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
-
     const datingProfile = await this.datingProfileRepo.findOneOrFail(
       {
-        user,
+        user: this.userRepo.getReference(authUser.userId!),
       },
       { populate: ['personality'] },
     );
@@ -1134,12 +1134,11 @@ export class DatingService extends BaseProfileService {
   }
 
   async addRelationship(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: CreateDatingRelationshipDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
     const datingProfile = await this.datingProfileRepo.findOneOrFail({
-      user,
+      user: this.userRepo.getReference(authUser.userId!),
     });
 
     if (datingProfile?.relationship) {
@@ -1159,14 +1158,12 @@ export class DatingService extends BaseProfileService {
   }
 
   async updateRelationship(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: UpdateDatingRelationshipDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
-
     const datingProfile = await this.datingProfileRepo.findOneOrFail(
       {
-        user,
+        user: this.userRepo.getReference(authUser.userId!),
       },
       { populate: ['relationship'] },
     );
@@ -1182,14 +1179,13 @@ export class DatingService extends BaseProfileService {
   }
 
   async addLocationProfile(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: CreateLocationProfileDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
-
+    const userId = authUser.userId!;
     const datingProfile = await this.datingProfileRepo.findOneOrFail(
       {
-        user,
+        user: this.userRepo.getReference(userId),
       },
       { populate: ['locationProfiles'] },
     );
@@ -1208,7 +1204,7 @@ export class DatingService extends BaseProfileService {
     const { country, point, location } = await this.handleLocation(payload);
 
     const dateLocationProfile = this.datingLocationProfileRepo.create({
-      user,
+      user: this.userRepo.getReference(userId),
       country,
       datingProfile,
       point,
@@ -1220,15 +1216,13 @@ export class DatingService extends BaseProfileService {
   }
 
   async updateProfileLocation(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: UpdateProfileLocationDto,
   ) {
     const { address, location, pinLocation, locationProfileId } = payload;
-    const { user } = await this.authService.fetchAuthUser(authId);
-
     const datingProfile = await this.datingProfileRepo.findOneOrFail(
       {
-        user,
+        user: this.userRepo.getReference(authUser.userId!),
       },
       { populate: ['locationProfiles'] },
     );
@@ -1276,10 +1270,12 @@ export class DatingService extends BaseProfileService {
   }
 
   async addLocationProfileMedia(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: CreateLocationProfileMediaDto,
   ): Promise<void> {
-    const { user, pushToken } = await this.authService.fetchAuthUser(authId);
+    const { user, pushToken } = await this.authService.fetchAuthUser(
+      authUser.sub,
+    );
 
     const jobId = uuidv4();
 
@@ -1361,10 +1357,10 @@ export class DatingService extends BaseProfileService {
   }
 
   async updateLocationProfileMedia(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: UpdateMediaDto,
   ): Promise<void> {
-    const auth = await this.authService.fetchAuthUser(authId);
+    const auth = await this.authService.fetchAuthUser(authUser.sub);
     const { user } = auth;
     const { mediaId, file, reOrder, locationProfileId } = payload;
     const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
@@ -1428,17 +1424,15 @@ export class DatingService extends BaseProfileService {
   }
 
   async removeLocationProfileMedia(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: RemoveMediaDto,
   ): Promise<void> {
-    const auth = await this.authService.fetchAuthUser(authId);
-    const { user } = auth;
     const { mediaId, locationProfileId } = payload;
 
     const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
       {
         id: locationProfileId,
-        user,
+        user: this.userRepo.getReference(authUser.userId!),
       },
       { populate: ['media'] },
     );
@@ -1508,15 +1502,15 @@ export class DatingService extends BaseProfileService {
   }
 
   async updateFilter(
-    authId: string,
+    authUser: AuthenticatedUser,
     payload: UpdateDateFilterDto,
   ): Promise<void> {
-    const { user } = await this.authService.fetchAuthUser(authId);
     const { locationProfile: locationProfileId } = payload;
+    const userId = authUser.userId!;
     const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
       {
         id: locationProfileId,
-        user,
+        user: this.userRepo.getReference(userId),
       },
       { populate: ['datingFilter', 'datingProfile'] },
     );
@@ -1529,7 +1523,7 @@ export class DatingService extends BaseProfileService {
 
     if (!locationProfile.datingFilter) {
       const datingFilter = this.datingFilterRepo.create({
-        user,
+        user: this.userRepo.getReference(userId),
         locationProfile,
         ...allowedFilters,
       });
@@ -1542,13 +1536,11 @@ export class DatingService extends BaseProfileService {
   }
 
   async findPotentialMatches<T = DatingMatchResponse>(
-    authId: string,
+    authUser: AuthenticatedUser,
     profileId?: string,
   ): Promise<T[]> {
-    const { user } = await this.authService.fetchAuthUser(authId);
-
     const locationProfile = await this.datingLocationProfileRepo.findOneOrFail(
-      { id: profileId, user },
+      { id: profileId, user: this.userRepo.getReference(authUser.userId!) },
       { populate: ['datingFilter', 'datingProfile', 'datingProfile.user'] },
     );
 
@@ -1667,7 +1659,6 @@ export class DatingService extends BaseProfileService {
     qb.limit(50);
     return (await qb.getResultList()) as T[];
   }
-  // todo: ensur there is no race condiation when creating dating interaction that could lead to match not happening
   // note: profile completion monitor should be handled on client - just warn them
   // next:
   // anchor

@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsEmail, IsString, Length, Matches } from 'class-validator';
-import { Anchor } from 'src/feature/user/entities/user/anchor.entity';
+import { Anchor } from 'src/feature/anchor/entities/anchor.entity';
 import { User } from 'src/feature/user/entities/user/user.entity';
 
 export class SendEMailCodeDto {

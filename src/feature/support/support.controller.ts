@@ -8,7 +8,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { SupportService } from './support.service';
-import { CreateSupportDto } from './dto/create-support-message.dto';
+import { CreateSupportMessageDto } from './dto/create-support-message.dto';
 import { UpdateSupportDto } from './dto/update-support.dto';
 
 @Controller('support')
@@ -16,8 +16,8 @@ export class SupportController {
   constructor(private readonly supportService: SupportService) {}
 
   @Post()
-  create(@Body() createSupportDto: CreateSupportDto) {
-    return this.supportService.create(createSupportDto);
+  create(@Body() CreateSupportMessageDto: CreateSupportMessageDto) {
+    return this.supportService.create(CreateSupportMessageDto);
   }
 
   @Get()

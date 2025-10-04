@@ -4,15 +4,12 @@ import { EntityManager, EntityRepository } from '@mikro-orm/postgresql';
 import { User } from './entities/user/user.entity';
 import { EmailQueueService } from 'src/system/queue/email/email.qservice';
 import { Auth } from '../auth/entities/auth.entity';
-import { Anchor } from './entities/user/anchor.entity';
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { Interest } from './entities/user/character/interest.entity';
 import { Country } from '../location/entities/country.entity';
 import { Profession } from './entities/user/character/profession.entity';
 import { ReligionSect } from './entities/user/character/religion-sect.entity';
 import { Ethnic } from '../location/entities/ethnic.entity';
-import { Media } from './entities/media.entity';
-import { Region } from '../location/entities/region.entity';
 
 @Injectable()
 export class UserService {
@@ -24,14 +21,11 @@ export class UserService {
     @InjectRepository(Interest)
     private interestRepo: EntityRepository<Interest>,
     @InjectRepository(Country) private countryRepo: EntityRepository<Country>,
-    @InjectRepository(Region) private regionRepo: EntityRepository<Region>,
     @InjectRepository(Profession)
     private professionRepo: EntityRepository<Profession>,
     @InjectRepository(ReligionSect)
     private religionSectRepo: EntityRepository<ReligionSect>,
     @InjectRepository(Ethnic) private ethnicRepo: EntityRepository<Ethnic>,
-    @InjectRepository(Anchor) private anchorRepo: EntityRepository<Anchor>,
-    @InjectRepository(Media) private mediaRepo: EntityRepository<Media>,
   ) {}
 
   private async handleUserRelations(
@@ -114,28 +108,6 @@ export class UserService {
         grewUpInId,
       },
     };
-
-    //     return {
-    //   data: data as Omit<
-    //     T,
-    //     | 'interestIds'
-    //     | 'nationalityIds'
-    //     | 'professionId'
-    //     | 'religionSectId'
-    //     | 'ethnicId'
-    //     | 'originCountryId'
-    //     | 'grewUpInId'
-    //   >,
-    //   relationFileds: {
-    //     interestIds,
-    //     nationalityIds,
-    //     professionId,
-    //     religionSectId,
-    //     ethnicId,
-    //     originCountryId,
-    //     grewUpInId,
-    //   },
-    // };
   }
 
   async updateFaceVerificationStatus(
@@ -151,7 +123,6 @@ export class UserService {
     return this.userRepo.findOneOrFail({ id: userId }, { populate: ['auth'] });
   }
 
-  // async fetchAuthUser(authId: string, authWithUser = false): Promise<User> {
   //   if (authWithUser) {
   //     const auth = await this.authRepo.findOneOrFail(
   //       { id: authId },
@@ -251,82 +222,4 @@ export class UserService {
     this.em.assign(user, { ...data });
     await this.em.flush();
   }
-
-  // friend or date onboard
-
-  // should update handle files and id verification?
-
-  // findLovers
-
-  // subscribe
-
-  // compatible match
-
-  // deleteAcc
-  // : anchor realm ?
-  // like - one or many ?
-  //  dont like
-  // views
-  // match
-  // unmatch
-  // chat
 }
-
-// users/profile.service.ts
-// import { Injectable } from '@nestjs/common';
-// import { S3Service } from '../common/s3.service';
-
-// @Injectable()
-// export class ProfileService {
-//   constructor(private readonly s3Service: S3Service) {}
-
-//   async createProfile(
-//     data: any,
-//     profilePictures?: Express.Multer.File[],
-//     verificationSelfie?: Express.Multer.File,
-//   ) {
-//     const uploadedProfilePictures = await Promise.all(
-//       (profilePictures || []).map((file) =>
-//         this.s3Service.uploadFile(file, 'profile-pictures'),
-//       ),
-//     );
-
-//     let selfieUrl: string | null = null;
-//     if (verificationSelfie) {
-//       selfieUrl = await this.s3Service.uploadFile(verificationSelfie, 'selfies');
-//     }
-
-//     // Save user profile data and image URLs to DB (example placeholder)
-//     return {
-//       message: 'Profile created',
-//       data: {
-//         ...data,
-//         profilePictures: uploadedProfilePictures,
-//         verificationSelfie: selfieUrl,
-//       },
-//     };
-//   }
-// }
-
-// users/profile.service.ts
-// import { RekognitionService } from '../common/rekognition.service';
-
-// constructor(
-//   private readonly s3Service: S3Service,
-//   private readonly rekognitionService: RekognitionService,
-// ) {}
-
-// async verifyUserIdentity(selfieUrl: string, idCardUrl: string) {
-//   const similarity = await this.rekognitionService.compareFaces(
-//     selfieUrl,
-//     idCardUrl,
-//   );
-
-//   const ocrResults = await this.rekognitionService.extractText(idCardUrl);
-
-//   return {
-//     similarity,
-//     idText: ocrResults,
-//     isMatch: similarity >= 80,
-//   };
-// }

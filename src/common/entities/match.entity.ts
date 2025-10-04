@@ -1,23 +1,33 @@
-import { Entity, Property, Index, ManyToOne } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  Index,
+  ManyToOne,
+  PrimaryKey,
+} from '@mikro-orm/core';
 import { BaseTimeEntity } from 'src/common/entities/base.entity';
 import { User } from 'src/feature/user/entities/user/user.entity';
 import {
   ProfileType,
   UnmatchReason,
   InteractionEventType,
+  RematchStatus,
 } from 'src/common/types/enums/other.enum';
 
 @Entity()
 @Index({ properties: ['profileType', 'createdAt'] })
 @Index({ properties: ['isUnmatched', 'matchedAt'] })
+@Index({ properties: ['matchId'] })
 export class Match extends BaseTimeEntity {
+  @Property({ unique: true })
+  matchId!: string;
+
   @Property({ type: 'string' })
   profileType!: ProfileType;
 
   @Property({ type: 'date' })
   matchedAt!: Date;
 
-  // User references for efficient querying
   @Property()
   sourceUserId!: string;
 
@@ -50,7 +60,7 @@ export class Match extends BaseTimeEntity {
   @Property({ type: 'json', nullable: true })
   rematchContext?: {
     message: string;
-    status: 'pending' | 'accepted' | 'rejected' | 'expired';
+    status: RematchStatus;
     requestedAt: Date;
     requestedBy: string;
     respondedAt?: Date;
