@@ -41,6 +41,7 @@
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^11.1.6",
+    "agora-token": "^2.0.5",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "bull": "^4.16.5",
@@ -121,6 +122,9 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

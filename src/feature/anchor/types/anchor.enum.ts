@@ -1,7 +1,6 @@
 export enum UserPoolMode {
   ISOLATED = 'isolated',
   MIXED = 'mixed',
-  HYBRID = 'hybrid',
 }
 
 export enum AnchorTheme {

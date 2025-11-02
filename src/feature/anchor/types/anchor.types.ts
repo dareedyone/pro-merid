@@ -55,7 +55,6 @@ export interface AnchorModeration {
 }
 
 export interface AnchorConfig {
-  userPoolMode: UserPoolMode;
   branding: AnchorBranding;
   features: AnchorFeatures;
   matching: AnchorMatching;
@@ -74,7 +73,6 @@ export interface AnchorConfig {
 export interface AnchorUserContext {
   anchorId: string;
   userPoolMode: UserPoolMode;
-  canSeeOtherAnchors: boolean;
   canMatchWithOtherAnchors: boolean;
   moderationLevel: ModerationLevel;
   features: AnchorFeatures;

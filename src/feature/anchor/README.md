@@ -25,9 +25,8 @@ Anchors are B2B clients who can:
 
 #### User Pool Management
 
-- **Isolated Mode**: Users can only see and match with users from the same anchor
+- **Isolated Mode**: Users can only see and match with users from the same anchor - society or group e.g Nasfat, Jew community
 - **Mixed Mode**: Users can see and match with all platform users
-- **Hybrid Mode**: Custom logic based on anchor configuration
 
 #### Branding & Customization
 

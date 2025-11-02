@@ -9,7 +9,11 @@ import {
 import { User } from '../../user/entities/user/user.entity';
 import { Auth } from '../../auth/entities/auth.entity';
 import { BaseTimeEntity } from 'src/common/entities/base.entity';
-import { AnchorStatus } from 'src/feature/anchor/types/anchor.enum';
+import {
+  AnchorStatus,
+  UserPoolMode,
+} from 'src/feature/anchor/types/anchor.enum';
+import { AnchorConfig } from '../types/anchor.types';
 
 @Entity()
 export class Anchor extends BaseTimeEntity {
@@ -22,14 +26,17 @@ export class Anchor extends BaseTimeEntity {
   @Property()
   name!: string;
 
+  @Property({ type: 'string', default: UserPoolMode.ISOLATED })
+  poolMode: UserPoolMode = UserPoolMode.ISOLATED;
+
   @Property()
   subdomain?: string;
 
   @Property({ type: 'json', nullable: true })
-  config?: Record<string, any>; // logo, colors, settings, etc.
+  config?: AnchorConfig; // logo, colors, settings, etc.
 
-  @Property({ type: 'enum' })
-  status: AnchorStatus = AnchorStatus.ACTIVE;
+  @Property({ type: 'string', default: AnchorStatus.INACTIVE })
+  status: AnchorStatus = AnchorStatus.INACTIVE;
 
   @OneToMany(() => User, (user) => user.anchor)
   users = new Collection<User>(this);

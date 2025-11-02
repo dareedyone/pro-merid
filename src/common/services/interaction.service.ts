@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { AuthService } from '../../feature/auth/auth.service';
@@ -62,7 +62,43 @@ export class InteractionService {
     });
   }
 
-  private generateMatchId(
+  async notifyMatchParties({
+    sourceUserId,
+    targetUserId,
+    targetUserName,
+    sourceUserName,
+  }: {
+    sourceUserId: string;
+    targetUserId: string;
+    targetUserName: string;
+    sourceUserName: string;
+  }) {
+    try {
+      await this.notificationService.sendNotification({
+        userId: sourceUserId,
+        type: NotificationType.MATCH,
+        data: {
+          matchedUserId: targetUserId,
+          matchedUserName: targetUserName,
+          chatId: undefined,
+        },
+      });
+
+      await this.notificationService.sendNotification({
+        userId: targetUserId,
+        type: NotificationType.MATCH,
+        data: {
+          matchedUserId: sourceUserId,
+          matchedUserName: sourceUserName,
+          chatId: undefined,
+        },
+      });
+    } catch (error) {
+      this.logger.error('Failed to send match notifications:', error);
+    }
+  }
+
+  generateMatchId(
     profileId1: string,
     profileId2: string,
     profileType: ProfileType,
@@ -71,7 +107,7 @@ export class InteractionService {
     return `${firstId}-${secondId}-${profileType}`;
   }
 
-  private async getOrCreateMatch(
+  async createMatch(
     matchId: string,
     profileType: ProfileType,
     matchedAt: Date,
@@ -80,18 +116,22 @@ export class InteractionService {
   ): Promise<Match> {
     let match = await this.matchRepo.findOne({ matchId });
 
-    if (!match) {
-      match = this.matchRepo.create({
-        matchId,
-        profileType,
-        matchedAt,
-        sourceUserId,
-        targetUserId,
-        isUnmatched: false,
-      });
-      await this.em.persist(match);
+    if (match) {
+      throw new BadRequestException('Match already exists');
     }
+    match = this.matchRepo.create({
+      matchId,
+      profileType,
+      matchedAt,
+      sourceUserId,
+      targetUserId,
+    });
+    await this.em.persistAndFlush(match);
 
+    this.addMatchEvent(match, {
+      event: InteractionEventType.INITIAL_MATCH,
+      initiatedBy: sourceUserId,
+    });
     return match;
   }
 
@@ -159,18 +199,13 @@ export class InteractionService {
             profileType,
           );
 
-          const match = await this.getOrCreateMatch(
+          const match = await this.createMatch(
             matchId,
             profileType,
             matchedAt,
             sourceUser.id,
             targetUser.id,
           );
-
-          this.addMatchEvent(match, {
-            event: InteractionEventType.INITIAL_MATCH,
-            initiatedBy: sourceUser.id,
-          });
 
           interaction.isMatch = true;
           interaction.matchedAt = matchedAt;
@@ -179,36 +214,18 @@ export class InteractionService {
           reverseInteraction.matchedAt = matchedAt;
           reverseInteraction.match = match;
 
-          await em.persist([interaction, reverseInteraction, match]);
+          await em.persist([interaction, reverseInteraction]);
         }
-
         await em.flush();
 
         if (isMatch) {
           setImmediate(async () => {
-            try {
-              await this.notificationService.sendNotification({
-                userId: sourceUser.id,
-                type: NotificationType.MATCH,
-                data: {
-                  matchedUserId: targetUser.id,
-                  matchedUserName: targetUser.firstName,
-                  chatId: undefined,
-                },
-              });
-
-              await this.notificationService.sendNotification({
-                userId: targetUser.id,
-                type: NotificationType.MATCH,
-                data: {
-                  matchedUserId: sourceUser.id,
-                  matchedUserName: sourceUser.firstName,
-                  chatId: undefined,
-                },
-              });
-            } catch (error) {
-              this.logger.error('Failed to send match notifications:', error);
-            }
+            await this.notifyMatchParties({
+              sourceUserId: sourceUser.id,
+              targetUserId: targetUser.id,
+              targetUserName: targetUser.firstName,
+              sourceUserName: sourceUser.firstName,
+            });
           });
         }
 

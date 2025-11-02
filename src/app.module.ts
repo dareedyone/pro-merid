@@ -13,7 +13,6 @@ import { ChatModule } from './feature/chat/chat.module';
 import { mikroOrmConfigFactory } from './common/database/mikro-orm.config';
 import { mongooseConfigFactory } from './common/database/mongoose.config';
 import { LocationModule } from './feature/location/location.module';
-import { EventModule } from './feature/event/event.module';
 import { SupportModule } from './feature/support/support.module';
 import { QueueModule } from './system/queue/queue.module';
 import { RedisCacheModule } from './system/cache/redis-cache.module';
@@ -27,6 +26,7 @@ import { CommonModule } from './common/common.module';
 import { SubscriptionModule } from './feature/subscription/subscription.module';
 import { AnchorModule } from './feature/anchor/anchor.module';
 import { AdminModule } from './feature/admin/admin.module';
+import { ContentModule } from './feature/content/content.module';
 
 @Module({
   imports: [
@@ -70,7 +70,6 @@ import { AdminModule } from './feature/admin/admin.module';
     AuthModule,
     ChatModule,
     LocationModule,
-    EventModule,
     SupportModule,
     QueueModule,
     RedisCacheModule,
@@ -83,6 +82,7 @@ import { AdminModule } from './feature/admin/admin.module';
     SubscriptionModule,
     AnchorModule,
     AdminModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [

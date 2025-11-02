@@ -1,5 +1,6 @@
 import { Entity, PrimaryKey, OneToOne, Property } from '@mikro-orm/core';
 import {
+  CleanlinessType,
   DressSenseMen,
   DressSenseWomen,
   FinancialAttitudeType,
@@ -39,6 +40,9 @@ export class DatingPersonality {
 
   @Property({ nullable: true })
   dressSenseWomen?: DressSenseWomen;
+
+  @Property({ nullable: true })
+  cleanliness?: CleanlinessType;
 
   @Property({ nullable: true })
   dressSenseMen?: DressSenseMen;

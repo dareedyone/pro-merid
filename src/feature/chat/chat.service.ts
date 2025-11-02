@@ -12,6 +12,7 @@ import {
   MessageType,
   MessageStatus,
 } from './entities/message.entity';
+import { Call, CallDocument, CallStatus } from './entities/call.entity';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import {
@@ -26,15 +27,34 @@ import {
   ReplyToMessageDto,
   ReactionResponseDto,
 } from './dto/reaction.dto';
+import {
+  InitiateCallDto,
+  AnswerCallDto,
+  EndCallDto,
+  CallResponseDto,
+  CallHistoryDto,
+  CallListResponseDto,
+} from './dto/call.dto';
 import { ProfileType } from 'src/common/types/enums/other.enum';
 import { SubscriptionLimitsService } from './subscription-limits.service';
+import { CallProviderFactory } from './services/call-provider.factory';
+import { ICallProvider } from './interfaces/call-provider.interface';
+import {
+  NotificationService,
+  NotificationType,
+} from '../../system/notification/notification.service';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class ChatService {
   constructor(
     @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+    @InjectModel(Call.name) private callModel: Model<CallDocument>,
     private readonly subscriptionLimitsService: SubscriptionLimitsService,
+    private readonly callProviderFactory: CallProviderFactory,
+    private readonly notificationService: NotificationService,
+    private readonly authService: AuthService,
   ) {}
 
   async createChat(
@@ -886,6 +906,370 @@ export class ChatService {
       page,
       limit,
       hasMore: skip + limit < total,
+    };
+  }
+
+  // ==================== CALL METHODS ====================
+
+  /**
+   * Initiate a call in a chat
+   */
+  async initiateCall(
+    initiateCallDto: InitiateCallDto,
+    authId: string, // Auth ID for Agora UID generation
+    callerProfileId: string,
+    isPremium: boolean = false,
+    isTrueFynd: boolean = false,
+  ): Promise<CallResponseDto> {
+    const { chatId, type } = initiateCallDto;
+
+    // Get user ID from auth ID for database queries
+    const { user } = await this.authService.fetchAuthUser(authId);
+    const callerId = user.id; // User UUID for database queries
+
+    // Verify chat exists and user has access
+    const chat = await this.chatModel.findOne({
+      _id: chatId,
+      participantIds: { $in: [callerId] },
+      status: ChatStatus.ACTIVE,
+    });
+
+    if (!chat) {
+      throw new NotFoundException('Chat not found or access denied');
+    }
+
+    // Check if user is already in a call
+    const existingCall = await this.callModel.findOne({
+      participantIds: { $in: [callerId] },
+      status: {
+        $in: [CallStatus.INITIATING, CallStatus.RINGING, CallStatus.CONNECTED],
+      },
+    });
+
+    if (existingCall) {
+      throw new BadRequestException('User is already in a call');
+    }
+
+    // Check subscription limits for calling
+    this.subscriptionLimitsService.getSubscriptionLimits(
+      chat.profileType,
+      isPremium,
+      isTrueFynd,
+    );
+
+    // For now, we'll allow all users to make calls
+    // In the future, you can add call-specific limits here
+
+    // Get call provider and generate channel/token
+    const callProvider = this.callProviderFactory.getProvider();
+    const providerType = callProvider.getProviderType();
+    const channelName = callProvider.generateChannelName(chatId);
+    const tokenResponse = await callProvider.generateToken(
+      channelName,
+      authId, // Use authId for provider UID generation
+    );
+
+    // Get caller name
+    const callerName =
+      user.displayName || `${user.firstName} ${user.lastName}`.trim();
+
+    // Create call record
+    const call = new this.callModel({
+      chatId,
+      callerId,
+      callerProfileId,
+      participantIds: chat.participantIds,
+      participantProfileIds: chat.profileIds,
+      type,
+      status: CallStatus.INITIATING,
+      provider: providerType,
+      channelName,
+      token: tokenResponse.token,
+      callerUid: tokenResponse.uid,
+      participantUids: new Map([[callerId, tokenResponse.uid]]),
+    });
+
+    const savedCall = await call.save();
+
+    // Send notification to other participants
+    const otherParticipants = chat.participantIds.filter(
+      (id) => id !== callerId,
+    );
+    for (const participantId of otherParticipants) {
+      await this.notificationService.sendNotification({
+        userId: participantId,
+        type: NotificationType.CALL_INCOMING,
+        data: {
+          callId: savedCall._id.toString(),
+          chatId,
+          callType: type,
+          callerName,
+          callerAvatar: chat.avatar,
+        },
+      });
+    }
+
+    return this.mapCallToResponseDto(savedCall);
+  }
+
+  /**
+   * Answer an incoming call
+   */
+  async answerCall(
+    answerCallDto: AnswerCallDto,
+    authId: string,
+    userId: string,
+    _userProfileId: string,
+  ): Promise<CallResponseDto> {
+    const { callId, accept = true } = answerCallDto;
+
+    const call = await this.callModel.findOne({
+      _id: callId,
+      participantIds: { $in: [userId] },
+      status: { $in: [CallStatus.INITIATING, CallStatus.RINGING] },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Call not found or already ended');
+    }
+
+    if (!accept) {
+      // Decline the call
+      call.status = CallStatus.DECLINED;
+      call.endReason = 'declined';
+      call.endedAt = new Date();
+      await call.save();
+
+      // Notify caller
+      await this.notificationService.sendNotification({
+        userId: call.callerId,
+        type: NotificationType.CALL_DECLINED,
+        data: {
+          callId: call._id.toString(),
+          chatId: call.chatId,
+        },
+      });
+
+      return this.mapCallToResponseDto(call);
+    }
+
+    // Accept the call
+    call.status = CallStatus.CONNECTED;
+    call.startedAt = new Date();
+
+    // Generate token for the answering user
+    const callProvider = this.callProviderFactory.getProvider();
+    const channelName: string = call.channelName;
+    const tokenResponse = await callProvider.generateToken(
+      channelName,
+      authId, // Use authId for provider UID generation
+    );
+
+    // Add user to participant UIDs
+    call.participantUids.set(userId, tokenResponse.uid);
+    // Note: Token is per-user, so we don't update the call token
+
+    await call.save();
+
+    // Notify all participants that call is connected
+    for (const participantId of call.participantIds) {
+      await this.notificationService.sendNotification({
+        userId: participantId,
+        type: NotificationType.CALL_ENDED, // Using CALL_ENDED to indicate call started
+        data: {
+          callId: call._id.toString(),
+          chatId: call.chatId,
+          callType: call.type,
+        },
+      });
+    }
+
+    return this.mapCallToResponseDto(call);
+  }
+
+  /**
+   * End a call
+   */
+  async endCall(endCallDto: EndCallDto, userId: string): Promise<void> {
+    const { callId, reason = 'hung_up' } = endCallDto;
+
+    const call = await this.callModel.findOne({
+      _id: callId,
+      participantIds: { $in: [userId] },
+      status: { $in: [CallStatus.CONNECTED, CallStatus.RINGING] },
+    });
+
+    if (!call) {
+      throw new NotFoundException('Call not found or already ended');
+    }
+
+    // Calculate duration
+    const now = new Date();
+    const duration = call.startedAt
+      ? Math.floor((now.getTime() - call.startedAt.getTime()) / 1000)
+      : 0;
+
+    // Update call status
+    call.status = CallStatus.ENDED;
+    call.endedAt = now;
+    call.duration = duration;
+    call.endReason = reason;
+
+    await call.save();
+
+    // Notify all participants that call ended
+    for (const participantId of call.participantIds) {
+      if (participantId !== userId) {
+        await this.notificationService.sendNotification({
+          userId: participantId,
+          type: NotificationType.CALL_ENDED,
+          data: {
+            callId: call._id.toString(),
+            chatId: call.chatId,
+            callType: call.type,
+            duration,
+          },
+        });
+      }
+    }
+  }
+
+  /**
+   * Get call history for a user
+   */
+  async getCallHistory(
+    userId: string,
+    _profileType: ProfileType = ProfileType.DATE,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<CallListResponseDto> {
+    const skip = (page - 1) * limit;
+
+    // Get calls where user participated
+    const calls = await this.callModel
+      .find({
+        participantIds: { $in: [userId] },
+        status: CallStatus.ENDED,
+      })
+      .populate('chatId', 'name avatar')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .exec();
+
+    const total = await this.callModel.countDocuments({
+      participantIds: { $in: [userId] },
+      status: CallStatus.ENDED,
+    });
+
+    const callHistory = calls.map((call) => this.mapCallToHistoryDto(call));
+
+    return {
+      calls: callHistory,
+      total,
+      page,
+      limit,
+      hasMore: skip + limit < total,
+    };
+  }
+
+  /**
+   * Get active call for a user
+   */
+  async getActiveCall(userId: string): Promise<CallResponseDto | null> {
+    const call = await this.callModel.findOne({
+      participantIds: { $in: [userId] },
+      status: {
+        $in: [CallStatus.INITIATING, CallStatus.RINGING, CallStatus.CONNECTED],
+      },
+    });
+
+    return call ? this.mapCallToResponseDto(call) : null;
+  }
+
+  /**
+   * Get call provider configuration
+   */
+  getCallProviderConfig(): any {
+    const provider = this.callProviderFactory.getProvider();
+    return provider.getProviderConfig();
+  }
+
+  /**
+   * Get available call providers
+   */
+  getAvailableCallProviders(): Record<
+    string,
+    { available: boolean; configured: boolean }
+  > {
+    return this.callProviderFactory.getAvailableProviders();
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  private mapCallToResponseDto(call: CallDocument): CallResponseDto {
+    return {
+      id: call._id.toString(),
+      chatId: call.chatId,
+      callerId: call.callerId,
+      callerProfileId: call.callerProfileId,
+      participantIds: call.participantIds,
+      participantProfileIds: call.participantProfileIds,
+      type: call.type,
+      status: call.status,
+      startedAt: call.startedAt,
+      endedAt: call.endedAt,
+      duration: call.duration,
+      endReason: call.endReason,
+      provider: call.provider,
+      channelName: call.channelName,
+      token: call.token,
+      callerUid: call.callerUid,
+      participantUids: Object.fromEntries(call.participantUids),
+      isRecording: call.isRecording,
+      recordingUrl: call.recordingUrl,
+      createdAt:
+        'createdAt' in call && call.createdAt instanceof Date
+          ? call.createdAt
+          : new Date(),
+      updatedAt:
+        'updatedAt' in call && call.updatedAt instanceof Date
+          ? call.updatedAt
+          : new Date(),
+    };
+  }
+
+  private mapCallToHistoryDto(call: CallDocument): CallHistoryDto {
+    const populatedChat = call.populated('chatId');
+    const chat =
+      populatedChat &&
+      typeof populatedChat === 'object' &&
+      'name' in populatedChat
+        ? (populatedChat as { name: string; avatar?: string })
+        : null;
+
+    // Get createdAt properly typed from Mongoose timestamps
+    const createdAtValue = 'createdAt' in call && call.createdAt;
+    const createdAt =
+      createdAtValue instanceof Date ? createdAtValue : new Date();
+
+    return {
+      id: call._id.toString(),
+      chatId: call.chatId,
+      chatName: chat?.name || 'Unknown Chat',
+      chatAvatar: chat?.avatar,
+      callerId: call.callerId,
+      callerName: 'Caller', // TODO: Get actual caller name from user service
+      callerAvatar: chat?.avatar,
+      type: call.type,
+      status: call.status,
+      startedAt: call.startedAt,
+      endedAt: call.endedAt,
+      duration: call.duration,
+      endReason: call.endReason,
+      isRecording: call.isRecording,
+      recordingUrl: call.recordingUrl,
+      createdAt: createdAt instanceof Date ? createdAt : new Date(),
     };
   }
 }

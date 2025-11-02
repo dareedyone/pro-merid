@@ -31,7 +31,7 @@ export class DatingProfile extends BaseTimeEntity {
 
   //note:  personality first means hide pictures, so you can find chemistry - might not use
   @Property({ default: false, nullable: true })
-  personalityFirst?: boolean;
+  personalityFirst?: boolean; // todo: add this to client or remove - review
 
   @OneToOne(
     () => DatingPersonality,

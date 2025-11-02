@@ -4,6 +4,7 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  Property,
 } from '@mikro-orm/core';
 import { DatingProfile } from './dating.profile';
 import { BaseLocationProfileEntity } from 'src/common/entities/base-location-profile.entity';
@@ -18,6 +19,9 @@ export class DatingLocationProfile extends BaseLocationProfileEntity {
 
   @ManyToOne(() => DatingProfile)
   datingProfile!: DatingProfile;
+
+  @Property({ nullable: true })
+  bio: string;
 
   @OneToMany(() => Media, (media) => media.datingLocationProfile)
   media = new Collection<Media>(this);

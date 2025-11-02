@@ -23,6 +23,7 @@ import {
   ReplyToMessageDto,
 } from './dto/reaction.dto';
 import { UploadMediaDto } from './dto/media.dto';
+import { InitiateCallDto, AnswerCallDto, EndCallDto } from './dto/call.dto';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { Roles } from 'src/common/guards/roles.decorator';
@@ -314,5 +315,91 @@ export class ChatController {
 
     await this.mediaService.deleteMediaMessage(messageId, user.id);
     return { message: 'Media message deleted' };
+  }
+
+  // ==================== CALL ENDPOINTS ====================
+
+  @Post('calls/initiate')
+  async initiateCall(
+    @Req() req: Request,
+    @Body() initiateCallDto: InitiateCallDto,
+  ) {
+    const authId = req?.user?.sub;
+    const { user } = await this.authService.fetchAuthUser(authId);
+
+    const userProfileId = user.datingProfile?.id || user.friendProfile?.id;
+    if (!userProfileId) {
+      throw new Error('User profile not found');
+    }
+
+    // TODO: Get from user's subscription
+    const isPremium = false;
+    const isTrueFynd = false;
+
+    return this.chatService.initiateCall(
+      initiateCallDto,
+      authId, // Use authId instead of user.id for Agora UID
+      userProfileId,
+      isPremium,
+      isTrueFynd,
+    );
+  }
+
+  @Post('calls/answer')
+  async answerCall(@Req() req: Request, @Body() answerCallDto: AnswerCallDto) {
+    const authId = req?.user?.sub;
+    const { user } = await this.authService.fetchAuthUser(authId);
+
+    const userProfileId = user.datingProfile?.id || user.friendProfile?.id;
+    if (!userProfileId) {
+      throw new Error('User profile not found');
+    }
+
+    return this.chatService.answerCall(
+      answerCallDto,
+      authId,
+      user.id,
+      userProfileId,
+    );
+  }
+
+  @Post('calls/end')
+  async endCall(@Req() req: Request, @Body() endCallDto: EndCallDto) {
+    const authId = req?.user?.sub;
+    const { user } = await this.authService.fetchAuthUser(authId);
+
+    await this.chatService.endCall(endCallDto, user.id);
+    return { message: 'Call ended' };
+  }
+
+  @Get('calls/history')
+  async getCallHistory(
+    @Req() req: Request,
+    @Query('profileType') profileType: ProfileType = ProfileType.DATE,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 20,
+  ) {
+    const authId = req?.user?.sub;
+    const { user } = await this.authService.fetchAuthUser(authId);
+
+    return this.chatService.getCallHistory(user.id, profileType, page, limit);
+  }
+
+  @Get('calls/active')
+  async getActiveCall(@Req() req: Request) {
+    const authId = req?.user?.sub;
+    const { user } = await this.authService.fetchAuthUser(authId);
+
+    return this.chatService.getActiveCall(user.id);
+  }
+
+  @Get('calls/provider-config')
+  async getCallProviderConfig(@Req() req: Request) {
+    return this.chatService.getCallProviderConfig();
+  }
+
+  @Get('calls/available-providers')
+  async getAvailableCallProviders(@Req() req: Request) {
+    return this.chatService.getAvailableCallProviders();
   }
 }

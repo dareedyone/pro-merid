@@ -27,16 +27,61 @@ export class AnchorService {
   constructor(
     @InjectRepository(Anchor)
     private readonly anchorRepo: EntityRepository<Anchor>,
-    @InjectRepository(User)
-    private readonly userRepo: EntityRepository<User>,
-    @InjectRepository(Auth)
-    private readonly authRepo: EntityRepository<Auth>,
     private readonly em: EntityManager,
   ) {}
 
+  async getAnchorById(id: string): Promise<AnchorResponseDto> {
+    try {
+      const anchor = await this.anchorRepo.findOneOrFail(
+        { id },
+        { populate: ['authAccounts'] },
+      );
+
+      return this.mapToResponseDto(anchor);
+    } catch (error) {
+      this.logger.error(`Error fetching anchor ${id}:`, error);
+      throw error;
+    }
+  }
+
+  async updateAnchor(
+    id: string,
+    dto: UpdateAnchorDto,
+  ): Promise<AnchorResponseDto> {
+    try {
+      const anchor = await this.anchorRepo.findOneOrFail({ id });
+
+      if (dto.name) anchor.name = dto.name;
+      if (dto.subdomain) {
+        const existingAnchor = await this.anchorRepo.findOne({
+          subdomain: dto.subdomain,
+          id: { $ne: id },
+        });
+        if (existingAnchor) {
+          throw new ConflictException('Subdomain already exists');
+        }
+        anchor.subdomain = dto.subdomain;
+      }
+      if (dto.config) {
+        anchor.config = this.mergeConfig(
+          anchor.config as AnchorConfig,
+          this.convertDtoToConfig(dto.config),
+        );
+      }
+      //   if (dto.status) anchor.status = dto.status;
+
+      await this.em.persistAndFlush(anchor);
+
+      return this.mapToResponseDto(anchor);
+    } catch (error) {
+      this.logger.error(`Error updating anchor ${id}:`, error);
+      throw error;
+    }
+  }
+  // todo: use for admin
+
   async createAnchor(dto: CreateAnchorDto): Promise<AnchorResponseDto> {
     try {
-      // Check if subdomain is unique
       if (dto.subdomain) {
         const existingAnchor = await this.anchorRepo.findOne({
           subdomain: dto.subdomain,
@@ -46,10 +91,10 @@ export class AnchorService {
         }
       }
 
-      // Create anchor with default config
       const anchor = this.anchorRepo.create({
         name: dto.name,
         subdomain: dto.subdomain,
+        poolMode: dto.config.userPoolMode || UserPoolMode.ISOLATED,
         config: this.convertDtoToConfig(dto.config) as any,
         status: AnchorStatus.ACTIVE,
       });
@@ -65,20 +110,26 @@ export class AnchorService {
     }
   }
 
-  async getAnchorById(id: string): Promise<AnchorResponseDto> {
+  async deleteAnchor(id: string): Promise<void> {
     try {
-      const anchor = await this.anchorRepo.findOne(
-        { id },
-        { populate: ['users', 'authAccounts'] },
-      );
-
+      const anchor = await this.anchorRepo.findOne({ id });
       if (!anchor) {
         throw new NotFoundException('Anchor not found');
       }
 
-      return this.mapToResponseDto(anchor);
+      // Check if anchor has users
+      //   const userCount = await this.userRepo.count({ anchor: { id } });
+      //   if (userCount > 0) {
+      //     throw new BadRequestException(
+      //       'Cannot delete anchor with existing users',
+      //     );
+      //   }
+
+      await this.em.removeAndFlush(anchor);
+
+      this.logger.log(`Deleted anchor: ${id}`);
     } catch (error) {
-      this.logger.error(`Error fetching anchor ${id}:`, error);
+      this.logger.error(`Error deleting anchor ${id}:`, error);
       throw error;
     }
   }
@@ -91,7 +142,7 @@ export class AnchorService {
       const [anchors, total] = await this.anchorRepo.findAndCount(
         {},
         {
-          populate: ['users', 'authAccounts'],
+          populate: ['authAccounts'],
           limit,
           offset: (page - 1) * limit,
           orderBy: { createdAt: 'DESC' },
@@ -110,73 +161,9 @@ export class AnchorService {
     }
   }
 
-  async updateAnchor(
-    id: string,
-    dto: UpdateAnchorDto,
-  ): Promise<AnchorResponseDto> {
-    try {
-      const anchor = await this.anchorRepo.findOne({ id });
-      if (!anchor) {
-        throw new NotFoundException('Anchor not found');
-      }
+  // end for admin
 
-      // Update fields
-      if (dto.name) anchor.name = dto.name;
-      if (dto.subdomain) {
-        // Check if subdomain is unique
-        const existingAnchor = await this.anchorRepo.findOne({
-          subdomain: dto.subdomain,
-          id: { $ne: id },
-        });
-        if (existingAnchor) {
-          throw new ConflictException('Subdomain already exists');
-        }
-        anchor.subdomain = dto.subdomain;
-      }
-      if (dto.config) {
-        anchor.config = this.mergeConfig(
-          anchor.config as AnchorConfig,
-          this.convertDtoToConfig(dto.config),
-        );
-      }
-      if (dto.status) anchor.status = dto.status;
-
-      await this.em.persistAndFlush(anchor);
-
-      this.logger.log(`Updated anchor: ${anchor.id} - ${anchor.name}`);
-
-      return this.mapToResponseDto(anchor);
-    } catch (error) {
-      this.logger.error(`Error updating anchor ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async deleteAnchor(id: string): Promise<void> {
-    try {
-      const anchor = await this.anchorRepo.findOne({ id });
-      if (!anchor) {
-        throw new NotFoundException('Anchor not found');
-      }
-
-      // Check if anchor has users
-      const userCount = await this.userRepo.count({ anchor: { id } });
-      if (userCount > 0) {
-        throw new BadRequestException(
-          'Cannot delete anchor with existing users',
-        );
-      }
-
-      await this.em.removeAndFlush(anchor);
-
-      this.logger.log(`Deleted anchor: ${id}`);
-    } catch (error) {
-      this.logger.error(`Error deleting anchor ${id}:`, error);
-      throw error;
-    }
-  }
-
-  async getAnchorConfig(id: string): Promise<AnchorConfig> {
+  private async getAnchorConfig(id: string): Promise<AnchorConfig> {
     try {
       const anchor = await this.anchorRepo.findOne({ id });
       if (!anchor) {
@@ -216,22 +203,21 @@ export class AnchorService {
     }
   }
 
-  async getUserPoolMode(anchorId: string): Promise<UserPoolMode> {
-    try {
-      const config = await this.getAnchorConfig(anchorId);
-      return config.userPoolMode;
-    } catch (error) {
-      this.logger.error(
-        `Error getting user pool mode for anchor ${anchorId}:`,
-        error,
-      );
-      return UserPoolMode.ISOLATED; // Default fallback
-    }
-  }
+  //   async getUserPoolMode(anchorId: string): Promise<UserPoolMode> {
+  //     try {
+  //       const config = await this.getAnchorConfig(anchorId);
+  //       return config.userPoolMode;
+  //     } catch (error) {
+  //       this.logger.error(
+  //         `Error getting user pool mode for anchor ${anchorId}:`,
+  //         error,
+  //       );
+  //       return UserPoolMode.ISOLATED; // Default fallback
+  //     }
+  //   }
 
   private convertDtoToConfig(dtoConfig: AnchorConfigDto): AnchorConfig {
     return {
-      userPoolMode: dtoConfig.userPoolMode,
       branding: {
         logo: dtoConfig.branding.logo,
         primaryColor: dtoConfig.branding.primaryColor,
@@ -282,7 +268,6 @@ export class AnchorService {
     overrideConfig?: Partial<AnchorConfig>,
   ): AnchorConfig {
     const defaultConfig: AnchorConfig = {
-      userPoolMode: UserPoolMode.ISOLATED,
       branding: {
         theme: 'light' as any,
       },
@@ -340,6 +325,7 @@ export class AnchorService {
       id: anchor.id,
       name: anchor.name,
       subdomain: anchor.subdomain,
+      poolMode: anchor.poolMode,
       config: anchor.config as AnchorConfigDto,
       status: anchor.status,
       createdAt: anchor.createdAt,

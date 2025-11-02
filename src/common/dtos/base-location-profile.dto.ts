@@ -94,6 +94,9 @@ export class CreateBaseLocationProfileDto {
 }
 
 export class CreateLocationProfileDto extends CreateBaseLocationProfileDto {
+  @IsNotEmpty()
+  bio: string;
+
   @IsEnum(LocationType)
   type: LocationType; // todo: omit current due to flight mode
 

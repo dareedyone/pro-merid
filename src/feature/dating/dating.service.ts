@@ -1210,6 +1210,7 @@ export class DatingService extends BaseProfileService {
       point,
       location,
       type: payload.type,
+      bio: payload.bio,
     });
 
     await this.em.persistAndFlush(dateLocationProfile);
@@ -1660,21 +1661,24 @@ export class DatingService extends BaseProfileService {
     return (await qb.getResultList()) as T[];
   }
   // note: profile completion monitor should be handled on client - just warn them
+  // note: screenshot not allowed on client is important - especially for health and safety reasons
   // next:
   // anchor
-  // events
+  // call audio and video calls
+  // events - leave out of mvp - can use event brite -- use notification center
   // how to handle measured fields e.g height, body type.
+  // todo next: preference and security features - hide from contact, select trusted contacts for date security
   // testing
   // handle potential matches response to only return usable fields
 
-  private applyDatingBaseProfileFilters(
+  applyDatingBaseProfileFilters(
     qb: QueryBuilder<any>,
     filters: Omit<UpdateDateFilterDto, 'locationProfile'>,
   ): void {
     super.applyBaseProfileFilters(qb, filters);
   }
 
-  private applyDateProfileFilters(
+  applyDateProfileFilters(
     qb: QueryBuilder<any>,
     filters: Omit<UpdateDateFilterDto, 'locationProfile'>,
   ): void {
@@ -1687,8 +1691,24 @@ export class DatingService extends BaseProfileService {
     }
   }
 
+  /**
+   * Creates a QueryBuilder for users with dating profiles and anchor relationships
+   * Used by anchor services for matching operations
+   */
+  public createUserWithDatingProfileQueryBuilder(anchorId: string) {
+    return this.datingLocationProfileRepo
+      .createQueryBuilder('dlp')
+      .select(['u.*', 'dp.*', 'pers.*'])
+      .join('dlp.datingProfile', 'dp')
+      .join('dp.user', 'u')
+      .leftJoinAndSelect('u.anchor', 'anchor')
+      .leftJoinAndSelect('dp.personality', 'pers')
+      .where('u.anchor.id = ?', [anchorId]);
+  }
+
   // todo: move to base profile filter
-  private applyLocationFilters(
+  // note: consider app spotlighting and how that affects various subscriptions especially TF
+  applyLocationFilters(
     qb: QueryBuilder<any>,
     filters: Omit<UpdateDateFilterDto, 'locationProfile'>,
     point: GeoPoint | undefined,
@@ -1815,7 +1835,7 @@ export class DatingService extends BaseProfileService {
     }
   }
 
-  private applyPersonalityFilters(
+  public applyPersonalityFilters(
     qb: QueryBuilder<any>,
     filters: Omit<UpdateDateFilterDto, 'locationProfile'>,
   ): void {

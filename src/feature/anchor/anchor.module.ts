@@ -5,6 +5,7 @@ import { User } from 'src/feature/user/entities/user/user.entity';
 import { Auth } from 'src/feature/auth/entities/auth.entity';
 import { Match } from 'src/common/entities/match.entity';
 import { Chat } from 'src/feature/chat/entities/chat.entity';
+import { DatingService } from 'src/feature/dating/dating.service';
 import { AnchorService } from './services/anchor.service';
 import { AnchorUserService } from './services/anchor-user.service';
 import { AnchorModerationService } from './services/anchor-moderation.service';
@@ -13,7 +14,12 @@ import { AnchorModerationController } from './controllers/anchor-moderation.cont
 
 @Module({
   imports: [MikroOrmModule.forFeature([Anchor, User, Auth, Match, Chat])],
-  providers: [AnchorService, AnchorUserService, AnchorModerationService],
+  providers: [
+    AnchorService,
+    AnchorUserService,
+    AnchorModerationService,
+    DatingService,
+  ],
   controllers: [AnchorController, AnchorModerationController],
   exports: [AnchorService, AnchorUserService, AnchorModerationService],
 })

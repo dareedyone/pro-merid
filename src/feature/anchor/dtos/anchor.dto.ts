@@ -218,6 +218,7 @@ export class AnchorResponseDto {
   id: string;
   name: string;
   subdomain?: string;
+  poolMode: UserPoolMode;
   config: AnchorConfigDto;
   status: AnchorStatus;
   createdAt: Date;
@@ -247,18 +248,17 @@ export class RemoveUserFromAnchorDto {
   userId: string;
 }
 
-export class AnchorUserResponseDto {
+export class AnchorUserResponse {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
-  role: AnchorRole;
   joinedAt: Date;
   isActive: boolean;
 }
 
-export class AnchorUserListResponseDto {
-  users: AnchorUserResponseDto[];
+export class AnchorUserListResponse {
+  users: AnchorUserResponse[];
   total: number;
   page: number;
   limit: number;

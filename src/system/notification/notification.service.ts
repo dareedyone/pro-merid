@@ -18,6 +18,13 @@ export enum NotificationType {
   FRIEND_ACCEPTED = 'friend_accepted',
   FRIEND_DECLINED = 'friend_declined',
   UNFRIEND = 'unfriend',
+  CALL_INCOMING = 'call_incoming',
+  CALL_ENDED = 'call_ended',
+  CALL_MISSED = 'call_missed',
+  CALL_DECLINED = 'call_declined',
+  CONTENT_BLOG_PUBLISHED = 'content_blog_published',
+  CONTENT_EVENT_PUBLISHED = 'content_event_published',
+  CONTENT_STORY_PUBLISHED = 'content_story_published',
 }
 
 export interface NotificationContext {
@@ -36,6 +43,17 @@ export interface NotificationContext {
     matchId?: string;
     rejectedByUserId?: string;
     rejectedByUserName?: string;
+    callId?: string;
+    callType?: string;
+    callerName?: string;
+    callerAvatar?: string;
+    duration?: number;
+    contentId?: string;
+    contentType?: 'blog' | 'event' | 'success_story';
+    contentTitle?: string;
+    contentSlug?: string;
+    contentPreview?: string;
+    contentImage?: string;
   };
 }
 
@@ -89,6 +107,20 @@ export class NotificationService {
         return { webSocket: true, push: true, email: false };
       case NotificationType.REMATCH_REJECTED:
         return { webSocket: false, push: true, email: false };
+      case NotificationType.CALL_INCOMING:
+        return { webSocket: true, push: true, email: false };
+      case NotificationType.CALL_ENDED:
+        return { webSocket: true, push: false, email: false };
+      case NotificationType.CALL_MISSED:
+        return { webSocket: true, push: true, email: false };
+      case NotificationType.CALL_DECLINED:
+        return { webSocket: true, push: false, email: false };
+      case NotificationType.CONTENT_BLOG_PUBLISHED:
+        return { webSocket: true, push: true, email: false };
+      case NotificationType.CONTENT_EVENT_PUBLISHED:
+        return { webSocket: true, push: true, email: false };
+      case NotificationType.CONTENT_STORY_PUBLISHED:
+        return { webSocket: true, push: true, email: false };
       default:
         return { webSocket: false, push: true, email: false };
     }

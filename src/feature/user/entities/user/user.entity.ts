@@ -65,6 +65,15 @@ export class User {
   // todo different phone numbers for different countries/profiles ?
   // have a field for university - only for display
 
+  @Property()
+  gender!: Gender;
+
+  // @Property({ items: () => SexualOrientation, default: SexualOrientation.UNKNOWN })
+  // sexualOrientation!: SexualOrientation;
+
+  @Property({ default: MaritalStatus.UNKNOWN })
+  maritalStatus!: MaritalStatus;
+
   @ManyToOne(() => Profession)
   profession?: Profession;
 
@@ -100,15 +109,6 @@ export class User {
 
   @Property({ type: 'json', nullable: true })
   nationalityVerifications?: Record<string, boolean>;
-
-  @Property()
-  gender!: Gender;
-
-  // @Property({ items: () => SexualOrientation, default: SexualOrientation.UNKNOWN })
-  // sexualOrientation!: SexualOrientation;
-
-  @Property({ default: MaritalStatus.UNKNOWN })
-  maritalStatus!: MaritalStatus;
 
   @Property({
     default: PetPreference.NONE,
@@ -152,8 +152,8 @@ export class User {
   @Property({ nullable: true })
   beliefAstronology?: boolean = false;
 
-  @Property({ default: false, nullable: true })
-  isCeleb?: boolean = false;
+  // @Property({ default: false, nullable: true })
+  // isCeleb?: boolean = false;
 
   @Property({ default: true, type: 'boolean' })
   isActivated?: boolean = true;

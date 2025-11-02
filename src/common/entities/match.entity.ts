@@ -25,8 +25,8 @@ export class Match extends BaseTimeEntity {
   @Property({ type: 'string' })
   profileType!: ProfileType;
 
-  @Property({ type: 'date' })
-  matchedAt!: Date;
+  @Property({ type: 'date', nullable: true })
+  matchedAt?: Date = new Date();
 
   @Property()
   sourceUserId!: string;
@@ -40,9 +40,12 @@ export class Match extends BaseTimeEntity {
   @ManyToOne(() => User, { nullable: true })
   targetUser?: User;
 
+  @Property({ nullable: true, default: false })
+  isFacilitated?: boolean;
+
   // Unmatch tracking
   @Property({ default: false })
-  isUnmatched: boolean = false;
+  isUnmatched?: boolean = false;
 
   @Property({ nullable: true })
   unmatchedAt?: Date;

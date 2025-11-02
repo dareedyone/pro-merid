@@ -8,6 +8,8 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { Verification } from './entities/verification.entity';
 import { RekognitionService } from 'src/system/aws/rekognition.service';
 
+// @deprecated
+
 @Injectable()
 export class VerificationService {
   constructor(

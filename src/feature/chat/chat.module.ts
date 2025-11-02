@@ -5,8 +5,12 @@ import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { MediaService } from './media.service';
 import { SubscriptionLimitsService } from './subscription-limits.service';
+import { AgoraService } from './services/agora.service';
+import { WebRTCService } from './services/webrtc.service';
+import { CallProviderFactory } from './services/call-provider.factory';
 import { Chat, ChatSchema } from './entities/chat.entity';
 import { Message, MessageSchema } from './entities/message.entity';
+import { Call, CallSchema } from './entities/call.entity';
 import { AuthModule } from '../auth/auth.module';
 import { ActivityModule } from '../activity/activity.module';
 import { CronModule } from '../../system/cron/cron.module';
@@ -18,6 +22,7 @@ import { NotificationModule } from '../../system/notification/notification.modul
     MongooseModule.forFeature([
       { name: Chat.name, schema: ChatSchema },
       { name: Message.name, schema: MessageSchema },
+      { name: Call.name, schema: CallSchema },
     ]),
     AuthModule,
     ActivityModule,
@@ -31,6 +36,9 @@ import { NotificationModule } from '../../system/notification/notification.modul
     ChatGateway,
     MediaService,
     SubscriptionLimitsService,
+    AgoraService,
+    WebRTCService,
+    CallProviderFactory,
   ],
   exports: [ChatService, ChatGateway, MediaService, SubscriptionLimitsService],
 })
