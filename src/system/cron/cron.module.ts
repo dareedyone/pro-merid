@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { EmailSchedulerService } from './email-scheduler.service';
@@ -15,8 +15,8 @@ import { ProfileInteraction } from '../../feature/user/entities/profile/profile-
     MikroOrmModule.forFeature([ProfileInteraction]),
     ActivityModule,
     QueueModule,
-    ChatModule,
-    NotificationModule,
+    forwardRef(() => ChatModule),
+    forwardRef(() => NotificationModule),
   ],
   providers: [EmailSchedulerService, MatchExpiryService],
   exports: [EmailSchedulerService, MatchExpiryService],

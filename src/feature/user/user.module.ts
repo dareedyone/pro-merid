@@ -8,7 +8,6 @@ import { Anchor } from '../anchor/entities/anchor.entity';
 import { Interest } from './entities/user/character/interest.entity';
 import { Country } from '../location/entities/country.entity';
 import { Profession } from './entities/user/character/profession.entity';
-import { Religion } from './entities/user/character/religion.entity';
 import { Ethnic } from '../location/entities/ethnic.entity';
 import { DatingProfile } from '../dating/entities/dating.profile';
 import { DatingLocationProfile } from '../dating/entities/dating-location.profile';
@@ -17,6 +16,7 @@ import { DatingRelationship } from '../dating/entities/dating-relationship.entit
 import { DatingBiol } from '../dating/entities/dating-biol.entity';
 import { Media } from './entities/media.entity';
 import { City } from '../location/entities/city.entity';
+import { ReligionSect } from './entities/user/character/religion-sect.entity';
 
 @Module({
   imports: [
@@ -27,7 +27,7 @@ import { City } from '../location/entities/city.entity';
       Interest,
       Country,
       Profession,
-      Religion,
+      ReligionSect,
       Ethnic,
       DatingProfile,
       DatingLocationProfile,
@@ -40,5 +40,6 @@ import { City } from '../location/entities/city.entity';
   ],
   controllers: [UserController],
   providers: [UserService],
+  exports: [UserService],
 })
 export class UserModule {}

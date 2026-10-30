@@ -3,6 +3,7 @@ import { SubscriptionController } from './subscription.controller';
 import { SubscriptionService } from '../services/subscription.service';
 import { ProfileType } from 'src/common/types/enums/other.enum';
 import { SubscriptionType } from '../dtos/subscription.dto';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 
 describe('SubscriptionController', () => {
   let controller: SubscriptionController;
@@ -25,7 +26,12 @@ describe('SubscriptionController', () => {
           useValue: mockSubscriptionService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({
+        canActivate: jest.fn(() => true),
+      })
+      .compile();
 
     controller = module.get<SubscriptionController>(SubscriptionController);
   });
@@ -100,10 +106,18 @@ describe('SubscriptionController', () => {
 
       mockSubscriptionService.getSubscriptionStatus.mockResolvedValue(mockStatus);
 
-      const result = await controller.getSubscriptionStatus('user-123', ProfileType.DATE);
+      const mockRequest = {
+        user: {
+          userId: 'user-123',
+          sub: 'auth-123',
+          role: 'user' as any,
+        },
+      } as any;
+
+      const result = await controller.getSubscriptionStatus(mockRequest, ProfileType.DATE);
 
       expect(result).toEqual(mockStatus);
-      expect(mockSubscriptionService.getSubscriptionStatus).toHaveBeenCalledWith('user-123', ProfileType.DATE);
+      expect(mockSubscriptionService.getSubscriptionStatus).toHaveBeenCalledWith(mockRequest.user, ProfileType.DATE);
     });
   });
 
@@ -128,10 +142,18 @@ describe('SubscriptionController', () => {
 
       mockSubscriptionService.purchaseSubscription.mockResolvedValue(mockStatus);
 
-      const result = await controller.purchaseSubscription('user-123', dto);
+      const mockRequest = {
+        user: {
+          userId: 'user-123',
+          sub: 'auth-123',
+          role: 'user' as any,
+        },
+      } as any;
+
+      const result = await controller.purchaseSubscription(mockRequest, dto);
 
       expect(result).toEqual(mockStatus);
-      expect(mockSubscriptionService.purchaseSubscription).toHaveBeenCalledWith('user-123', dto);
+      expect(mockSubscriptionService.purchaseSubscription).toHaveBeenCalledWith(mockRequest.user, dto);
     });
   });
 
@@ -156,10 +178,18 @@ describe('SubscriptionController', () => {
 
       mockSubscriptionService.renewSubscription.mockResolvedValue(mockStatus);
 
-      const result = await controller.renewSubscription('user-123', dto);
+      const mockRequest = {
+        user: {
+          userId: 'user-123',
+          sub: 'auth-123',
+          role: 'user' as any,
+        },
+      } as any;
+
+      const result = await controller.renewSubscription(mockRequest, dto);
 
       expect(result).toEqual(mockStatus);
-      expect(mockSubscriptionService.renewSubscription).toHaveBeenCalledWith('user-123', dto);
+      expect(mockSubscriptionService.renewSubscription).toHaveBeenCalledWith(mockRequest.user, dto);
     });
   });
 
@@ -177,10 +207,18 @@ describe('SubscriptionController', () => {
 
       mockSubscriptionService.cancelSubscription.mockResolvedValue(mockResult);
 
-      const result = await controller.cancelSubscription('user-123', dto);
+      const mockRequest = {
+        user: {
+          userId: 'user-123',
+          sub: 'auth-123',
+          role: 'user' as any,
+        },
+      } as any;
+
+      const result = await controller.cancelSubscription(mockRequest, dto);
 
       expect(result).toEqual(mockResult);
-      expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith('user-123', dto);
+      expect(mockSubscriptionService.cancelSubscription).toHaveBeenCalledWith(mockRequest.user, dto);
     });
   });
 });

@@ -96,7 +96,10 @@ export class AuthService {
       auth = this.authRepo.create({ email, role: UserType.USER });
     }
 
-    if (!this.isTimeWithin(auth?.lastCodeSentAt, 60_000)) {
+    if (
+      auth?.lastCodeSentAt &&
+      this.isTimeWithin(auth.lastCodeSentAt, 60_000)
+    ) {
       throw new HttpException(
         'Please wait before requesting another code.',
         HttpStatus.TOO_MANY_REQUESTS,

@@ -15,19 +15,21 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 export class LocationController {
   constructor(private readonly locationService: LocationService) {}
 
+  // Note: These methods are placeholders - LocationService doesn't implement full CRUD
+  // The actual service has processLocation and resolveAndSaveLocation methods
   @Post()
   create(@Body() createLocationDto: CreateLocationDto) {
-    return this.locationService.create(createLocationDto);
+    throw new Error('Not implemented - use processLocation or resolveAndSaveLocation');
   }
 
   @Get()
   findAll() {
-    return this.locationService.findAll();
+    throw new Error('Not implemented');
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.locationService.findOne(+id);
+    throw new Error('Not implemented');
   }
 
   @Patch(':id')
@@ -35,11 +37,11 @@ export class LocationController {
     @Param('id') id: string,
     @Body() updateLocationDto: UpdateLocationDto,
   ) {
-    return this.locationService.update(+id, updateLocationDto);
+    throw new Error('Not implemented');
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.locationService.remove(+id);
+    throw new Error('Not implemented');
   }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityRepository } from '@mikro-orm/postgresql';
+import { EntityRepository, EntityManager } from '@mikro-orm/postgresql';
 import { City } from './entities/city.entity';
 import { Country } from './entities/country.entity';
 import { GeoFallbackService } from './geo-fallback.service';
@@ -14,6 +14,7 @@ export class LocationService {
   constructor(
     @InjectRepository(City) private cityRepo: EntityRepository<City>,
     @InjectRepository(Country) private countryRepo: EntityRepository<Country>,
+    private readonly em: EntityManager,
     private readonly geoFallback: GeoFallbackService,
   ) {}
   // create(createLocationDto: CreateLocationDto) {
@@ -26,10 +27,15 @@ export class LocationService {
     let { city, region, country, isoCountryCode } = location;
 
     if (!city || !country || !isoCountryCode) {
-      const fallback = await this.geoFallback.reverseGeocode(
+      const fallback = await this.geoFallback.reverseGeocode({
         latitude,
         longitude,
-      );
+        altitude: null,
+        accuracy: 0,
+        altitudeAccuracy: null,
+        heading: 0,
+        speed: 0,
+      });
 
       city ??= fallback.city;
       region ??= fallback.region;
@@ -90,17 +96,16 @@ export class LocationService {
     });
     // }
 
-    if (!cityEntity) {
+    if (!cityEntity && countryEntity) {
       cityEntity = this.cityRepo.create({
         name: city,
         country: countryEntity,
-        region,
-        centroidCoordinates: {
+        centroid: {
           type: 'Point',
           coordinates: [longitude, latitude],
         },
       });
-      await this.cityRepo.persistAndFlush(cityEntity);
+      await this.em.persistAndFlush(cityEntity);
     }
 
     return {

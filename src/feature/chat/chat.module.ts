@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
@@ -25,21 +25,31 @@ import { NotificationModule } from '../../system/notification/notification.modul
       { name: Call.name, schema: CallSchema },
     ]),
     AuthModule,
-    ActivityModule,
-    CronModule,
+    forwardRef(() => ActivityModule),
+    forwardRef(() => CronModule),
     RedisCacheModule,
-    NotificationModule,
+    forwardRef(() => NotificationModule), // Still needs forwardRef due to module-level circular dependency
   ],
   controllers: [ChatController],
   providers: [
     ChatService,
     ChatGateway,
+    {
+      provide: 'WEBSOCKET_NOTIFIER',
+      useExisting: ChatGateway,
+    },
     MediaService,
     SubscriptionLimitsService,
     AgoraService,
     WebRTCService,
     CallProviderFactory,
   ],
-  exports: [ChatService, ChatGateway, MediaService, SubscriptionLimitsService],
+  exports: [
+    ChatService,
+    ChatGateway,
+    'WEBSOCKET_NOTIFIER',
+    MediaService,
+    SubscriptionLimitsService,
+  ],
 })
 export class ChatModule {}

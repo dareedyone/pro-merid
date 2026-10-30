@@ -5,22 +5,18 @@ import { User } from 'src/feature/user/entities/user/user.entity';
 import { Auth } from 'src/feature/auth/entities/auth.entity';
 import { Match } from 'src/common/entities/match.entity';
 import { Chat } from 'src/feature/chat/entities/chat.entity';
-import { DatingService } from 'src/feature/dating/dating.service';
+import { DatingModule } from 'src/feature/dating/dating.module';
 import { AnchorService } from './services/anchor.service';
 import { AnchorUserService } from './services/anchor-user.service';
-import { AnchorModerationService } from './services/anchor-moderation.service';
 import { AnchorController } from './controllers/anchor.controller';
-import { AnchorModerationController } from './controllers/anchor-moderation.controller';
 
 @Module({
-  imports: [MikroOrmModule.forFeature([Anchor, User, Auth, Match, Chat])],
-  providers: [
-    AnchorService,
-    AnchorUserService,
-    AnchorModerationService,
-    DatingService,
+  imports: [
+    MikroOrmModule.forFeature([Anchor, User, Auth, Match, Chat]),
+    DatingModule,
   ],
-  controllers: [AnchorController, AnchorModerationController],
-  exports: [AnchorService, AnchorUserService, AnchorModerationService],
+  providers: [AnchorService, AnchorUserService],
+  controllers: [AnchorController],
+  exports: [AnchorService, AnchorUserService],
 })
 export class AnchorModule {}

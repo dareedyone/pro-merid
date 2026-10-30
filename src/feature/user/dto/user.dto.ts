@@ -161,3 +161,4 @@ export class UpdateUserDto extends PartialType(
   //   @IsOptional()
   //   someOtherId?: string;
 }
+// Todo: only basic details on create, the rest should be on update for progressive disclosure.

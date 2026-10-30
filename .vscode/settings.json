@@ -1,0 +1,24 @@
+{
+  // Use Prettier as formatter
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  
+  // Force Prettier to use .prettierrc and override user settings
+  "prettier.configPath": ".prettierrc",
+  "prettier.requireConfig": false,
+  "prettier.ignorePath": ".prettierignore",
+  
+  // Explicitly override user-level Prettier settings with .prettierrc values
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "all",
+  "prettier.printWidth": 80,
+  "prettier.semi": true,
+  "prettier.useTabs": false,
+  "prettier.tabWidth": 2,
+  "js/ts.tsdk.path": "node_modules/typescript/lib"
+}

@@ -333,22 +333,24 @@ export class ActivityService {
       );
 
       const newMatches = allMatches.filter(
-        (match) => match.matchedAt >= cutoffTime,
+        (match) => match.matchedAt && match.matchedAt >= cutoffTime,
       );
 
-      const matchDetails = newMatches.map((match) => {
-        const isSourceUser = match.sourceUserId === userId;
-        const otherUser = isSourceUser ? match.targetUser : match.sourceUser;
-        const otherUserId = isSourceUser
-          ? match.targetUserId
-          : match.sourceUserId;
+      const matchDetails = newMatches
+        .filter((match) => match.matchedAt) // Ensure matchedAt exists
+        .map((match) => {
+          const isSourceUser = match.sourceUserId === userId;
+          const otherUser = isSourceUser ? match.targetUser : match.sourceUser;
+          const otherUserId = isSourceUser
+            ? match.targetUserId
+            : match.sourceUserId;
 
-        return {
-          matchedUserId: otherUserId,
-          matchedUserName: otherUser?.displayName || 'Someone',
-          matchedAt: match.matchedAt,
-        };
-      });
+          return {
+            matchedUserId: otherUserId,
+            matchedUserName: otherUser?.displayName || 'Someone',
+            matchedAt: match.matchedAt!,
+          };
+        });
 
       let totalMissedMessages = 0;
       const messageCutoffTime = cutoffTime;

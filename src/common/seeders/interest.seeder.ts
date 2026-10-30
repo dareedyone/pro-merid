@@ -1,7 +1,7 @@
 import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
-import { InterestCategory } from '../entity/user/character/interest-category.entity';
-import { Interest } from '../entity/user/character/interest.entity';
+import { InterestCategory } from '../../feature/user/entities/user/character/interest-category.entity';
+import { Interest } from '../../feature/user/entities/user/character/interest.entity';
 
 export class InterestSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {

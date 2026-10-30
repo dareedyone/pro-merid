@@ -40,3 +40,5 @@ export interface UploadPictureResponseObjType {
   profileId: string;
   userId: string;
 }
+
+export * from './websocket-notifier.interface';

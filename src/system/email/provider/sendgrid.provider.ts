@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { EmailProvider } from '../interface/email-provider.interface';
-import * as sgMail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class SendgridProvider implements EmailProvider {
-  constructor() {
-    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  constructor(private readonly configService: ConfigService) {
+    sgMail.setApiKey(this.configService.get<string>('SENDGRID_API_KEY') || '');
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {

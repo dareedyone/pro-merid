@@ -4,11 +4,19 @@ import { getModelToken } from '@nestjs/mongoose';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat, ChatDocument, ChatStatus } from './entities/chat.entity';
-import { Call, CallDocument, CallStatus, CallType } from './entities/call.entity';
+import {
+  Call,
+  CallDocument,
+  CallStatus,
+  CallType,
+} from './entities/call.entity';
 import { Message, MessageDocument } from './entities/message.entity';
 import { SubscriptionLimitsService } from './subscription-limits.service';
 import { CallProviderFactory } from './services/call-provider.factory';
-import { NotificationService, NotificationType } from '../../system/notification/notification.service';
+import {
+  NotificationService,
+  NotificationType,
+} from '../../system/notification/notification.service';
 import { AuthService } from '../auth/auth.service';
 import { InitiateCallDto, AnswerCallDto, EndCallDto } from './dto/call.dto';
 
@@ -200,7 +208,11 @@ describe('ChatService', () => {
       expect(callModel.findOne).toHaveBeenCalledWith({
         participantIds: { $in: [mockUserId] },
         status: {
-          $in: [CallStatus.INITIATING, CallStatus.RINGING, CallStatus.CONNECTED],
+          $in: [
+            CallStatus.INITIATING,
+            CallStatus.RINGING,
+            CallStatus.CONNECTED,
+          ],
         },
       });
     });
@@ -209,8 +221,8 @@ describe('ChatService', () => {
       chatModel.findOne.mockResolvedValue(mockChat);
       callModel.findOne.mockResolvedValue(null);
 
-      const mockSavedCall = {
-        _id: mockCallId,
+      const mockCallInstance: any = {
+        _id: { toString: () => mockCallId },
         chatId: mockChatId,
         callerId: mockUserId,
         callerProfileId: mockCallerProfileId,
@@ -226,10 +238,15 @@ describe('ChatService', () => {
         isRecording: false,
         createdAt: new Date(),
         updatedAt: new Date(),
-        save: jest.fn().mockResolvedValue(mockCallId),
       };
 
-      callModel.mockReturnValue(mockSavedCall);
+      // Make save return the instance itself so savedCall has _id
+      const savedMock: any = {
+        ...mockCallInstance,
+        _id: { toString: () => mockCallId },
+      };
+      mockCallInstance.save = jest.fn().mockResolvedValue(savedMock);
+      callModel.mockReturnValue(mockCallInstance);
 
       const result = await service.initiateCall(
         initiateCallDto,
@@ -246,13 +263,15 @@ describe('ChatService', () => {
         status: ChatStatus.ACTIVE,
       });
       expect(callProviderFactory.getProvider).toHaveBeenCalled();
-      expect(mockCallProvider.generateChannelName).toHaveBeenCalledWith(mockChatId);
+      expect(mockCallProvider.generateChannelName).toHaveBeenCalledWith(
+        mockChatId,
+      );
       expect(mockCallProvider.generateToken).toHaveBeenCalledWith(
         'chat_chat123_1234567890',
         mockAuthId,
       );
       expect(callModel).toHaveBeenCalled();
-      expect(mockSavedCall.save).toHaveBeenCalled();
+      expect(mockCallInstance.save).toHaveBeenCalled();
       expect(result.channelName).toBe('chat_chat123_1234567890');
       expect(result.token).toBe('mock-token');
       expect(result.callerUid).toBe(123456789);
@@ -262,8 +281,8 @@ describe('ChatService', () => {
       chatModel.findOne.mockResolvedValue(mockChat);
       callModel.findOne.mockResolvedValue(null);
 
-      const mockSavedCall = {
-        _id: mockCallId,
+      const mockCallInstance: any = {
+        _id: { toString: () => mockCallId },
         chatId: mockChatId,
         callerId: mockUserId,
         callerProfileId: mockCallerProfileId,
@@ -279,10 +298,16 @@ describe('ChatService', () => {
         isRecording: false,
         createdAt: new Date(),
         updatedAt: new Date(),
-        save: jest.fn().mockResolvedValue(mockCallId),
+        save: jest.fn().mockResolvedValue(undefined),
       };
 
-      callModel.mockReturnValue(mockSavedCall);
+      // Make save return the instance itself so savedCall has _id
+      const savedMock: any = {
+        ...mockCallInstance,
+        _id: { toString: () => mockCallId },
+      };
+      mockCallInstance.save = jest.fn().mockResolvedValue(savedMock);
+      callModel.mockReturnValue(mockCallInstance);
 
       await service.initiateCall(
         initiateCallDto,
@@ -317,8 +342,8 @@ describe('ChatService', () => {
       chatModel.findOne.mockResolvedValue(mockChat);
       callModel.findOne.mockResolvedValue(null);
 
-      const mockSavedCall = {
-        _id: mockCallId,
+      const mockCallInstance2: any = {
+        _id: { toString: () => mockCallId },
         chatId: mockChatId,
         callerId: mockUserId,
         callerProfileId: mockCallerProfileId,
@@ -334,10 +359,14 @@ describe('ChatService', () => {
         isRecording: false,
         createdAt: new Date(),
         updatedAt: new Date(),
-        save: jest.fn().mockResolvedValue(mockCallId),
       };
 
-      callModel.mockReturnValue(mockSavedCall);
+      const savedMock2: any = {
+        ...mockCallInstance2,
+        _id: { toString: () => mockCallId },
+      };
+      mockCallInstance2.save = jest.fn().mockResolvedValue(savedMock2);
+      callModel.mockReturnValue(mockCallInstance2);
 
       const videoCallDto: InitiateCallDto = {
         chatId: mockChatId,
@@ -387,17 +416,26 @@ describe('ChatService', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       save: jest.fn().mockResolvedValue(undefined),
-      set: jest.fn().mockReturnThis(),
       endReason: undefined,
       endedAt: undefined,
       startedAt: undefined,
     };
 
+    // Make participantUids.set a jest mock
+    mockCall.participantUids.set = jest
+      .fn()
+      .mockReturnValue(mockCall.participantUids);
+
     it('should throw NotFoundException when call does not exist', async () => {
       callModel.findOne.mockResolvedValue(null);
 
       await expect(
-        service.answerCall(answerCallDto, mockAuthId, 'user-456', 'profile-456'),
+        service.answerCall(
+          answerCallDto,
+          mockAuthId,
+          'user-456',
+          'profile-456',
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -413,7 +451,12 @@ describe('ChatService', () => {
         accept: false,
       };
 
-      await service.answerCall(declineDto, mockAuthId, 'user-456', 'profile-456');
+      await service.answerCall(
+        declineDto,
+        mockAuthId,
+        'user-456',
+        'profile-456',
+      );
 
       expect(mockCall.save).toHaveBeenCalled();
       expect(mockCall.status).toBe(CallStatus.DECLINED);
@@ -431,7 +474,12 @@ describe('ChatService', () => {
     it('should accept call successfully', async () => {
       callModel.findOne.mockResolvedValue(mockCall);
 
-      await service.answerCall(answerCallDto, mockAuthId, 'user-456', 'profile-456');
+      await service.answerCall(
+        answerCallDto,
+        mockAuthId,
+        'user-456',
+        'profile-456',
+      );
 
       expect(mockCall.status).toBe(CallStatus.CONNECTED);
       expect(mockCall.startedAt).toBeInstanceOf(Date);

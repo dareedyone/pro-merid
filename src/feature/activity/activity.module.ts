@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ActivityService } from './activity.service';
@@ -17,7 +17,7 @@ import { Message, MessageSchema } from '../chat/entities/message.entity';
     MongooseModule.forFeature([{ name: Message.name, schema: MessageSchema }]),
     RedisCacheModule,
     AuthModule,
-    ChatModule,
+    forwardRef(() => ChatModule),
   ],
   controllers: [ActivityController],
   providers: [ActivityService, ActivityTrackerService],

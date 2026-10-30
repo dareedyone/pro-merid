@@ -221,29 +221,39 @@ export class WebhookService {
         return;
       }
 
+      // Create AuthenticatedUser from userId (reusable across all actions)
+      // Note: In production, userId should map to an auth ID via AuthService
+      const authUser = {
+        userId: userId,
+        sub: userId, // Use userId as sub for webhooks
+        role: 'user' as any,
+      };
+
       // Handle different webhook actions
       switch (action) {
         case 'purchased':
+          await this.subscriptionService.purchaseSubscription(authUser, {
+            profileType,
+            subscriptionType,
+            receiptData: JSON.stringify(transactionInfo),
+            transactionId: transactionInfo.transactionId,
+            productId: transactionInfo.productId,
+          });
+          break;
+
         case 'renewed':
-          await this.subscriptionService.processSubscription(
-            userId,
-            {
-              profileType,
-              subscriptionType,
-              receiptData: JSON.stringify(transactionInfo),
-              transactionId: transactionInfo.transactionId,
-              productId: transactionInfo.productId,
-            },
-            action === 'purchased'
-              ? SubscriptionAction.PURCHASED
-              : SubscriptionAction.RENEWED,
-          );
+          await this.subscriptionService.renewSubscription(authUser, {
+            profileType,
+            subscriptionType,
+            receiptData: JSON.stringify(transactionInfo),
+            transactionId: transactionInfo.transactionId,
+          });
           break;
 
         case 'failed_renewal':
         case 'expired':
         case 'revoked':
-          await this.subscriptionService.cancelSubscription(userId, {
+          await this.subscriptionService.cancelSubscription(authUser, {
             profileType,
             subscriptionType,
             reason: `Webhook: ${action}`,
@@ -294,23 +304,28 @@ export class WebhookService {
       switch (notification.notificationType) {
         case 1: // SUBSCRIPTION_RECOVERED
         case 2: // SUBSCRIPTION_RENEWED
-          await this.subscriptionService.processSubscription(
-            userId,
-            {
-              profileType,
-              subscriptionType,
-              receiptData: JSON.stringify(notification),
-              transactionId: notification.purchaseToken,
-              productId: notification.subscriptionId,
-            },
-            SubscriptionAction.RENEWED,
-          );
+          const renewAuthUserPlay = {
+            userId: userId,
+            sub: userId,
+            role: 'user' as any,
+          };
+          await this.subscriptionService.renewSubscription(renewAuthUserPlay, {
+            profileType,
+            subscriptionType,
+            receiptData: JSON.stringify(notification),
+            transactionId: notification.purchaseToken,
+          });
           break;
 
         case 3: // SUBSCRIPTION_CANCELED
         case 4: // SUBSCRIPTION_PURCHASED
-          await this.subscriptionService.processSubscription(
-            userId,
+          const purchaseAuthUserPlay = {
+            userId: userId,
+            sub: userId,
+            role: 'user' as any,
+          };
+          await this.subscriptionService.purchaseSubscription(
+            purchaseAuthUserPlay,
             {
               profileType,
               subscriptionType,
@@ -318,7 +333,6 @@ export class WebhookService {
               transactionId: notification.purchaseToken,
               productId: notification.subscriptionId,
             },
-            SubscriptionAction.PURCHASED,
           );
           break;
 
@@ -332,7 +346,12 @@ export class WebhookService {
           break;
 
         case 12: // SUBSCRIPTION_EXPIRED
-          await this.subscriptionService.cancelSubscription(userId, {
+          const expiredAuthUser = {
+            userId: userId,
+            sub: userId,
+            role: 'user' as any,
+          };
+          await this.subscriptionService.cancelSubscription(expiredAuthUser, {
             profileType,
             subscriptionType,
             reason: 'Webhook: subscription expired',
@@ -373,17 +392,18 @@ export class WebhookService {
 
       if (notification.notificationType === 1) {
         // ONE_TIME_PRODUCT_PURCHASED
-        await this.subscriptionService.processSubscription(
-          userId,
-          {
-            profileType,
-            subscriptionType,
-            receiptData: JSON.stringify(notification),
-            transactionId: notification.purchaseToken,
-            productId: notification.sku,
-          },
-          SubscriptionAction.PURCHASED,
-        );
+        const oneTimeAuthUser = {
+          userId: userId,
+          sub: userId,
+          role: 'user' as any,
+        };
+        await this.subscriptionService.purchaseSubscription(oneTimeAuthUser, {
+          profileType,
+          subscriptionType,
+          receiptData: JSON.stringify(notification),
+          transactionId: notification.purchaseToken,
+          productId: notification.sku,
+        });
       }
 
       this.logger.log(

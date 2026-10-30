@@ -8,19 +8,20 @@
 import type { MongooseModuleOptions } from '@nestjs/mongoose';
 import type { ConfigService } from '@nestjs/config';
 import type { Connection } from 'mongoose';
+import { Logger } from '@nestjs/common';
+
+const logger = new Logger('MongoDB');
 
 export const mongooseConfigFactory = (
   configService: ConfigService,
 ): MongooseModuleOptions => ({
   uri: configService.get<string>('MONGO_URI'),
   connectionFactory: (connection: Connection) => {
-    connection.on('connected', () => console.log('[MongoDB] connected'));
-    connection.on('open', () => console.log('[MongoDB] open'));
-    connection.on('disconnected', () => console.log('[MongoDB] disconnected'));
-    connection.on('reconnected', () => console.log('[MongoDB] reconnected'));
-    connection.on('disconnecting', () =>
-      console.log('[MongoDB] disconnecting'),
-    );
+    connection.on('connected', () => logger.log('Connected'));
+    connection.on('open', () => logger.log('Connection open'));
+    connection.on('disconnected', () => logger.warn('Disconnected'));
+    connection.on('reconnected', () => logger.log('Reconnected'));
+    connection.on('disconnecting', () => logger.log('Disconnecting'));
     return connection;
   },
 });

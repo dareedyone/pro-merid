@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -44,6 +45,7 @@ import { ContentModule } from './feature/content/content.module';
       ],
     }),
     MikroOrmModule.forRootAsync({
+      driver: PostgreSqlDriver,
       useFactory: mikroOrmConfigFactory,
       inject: [ConfigService],
     }),
@@ -57,6 +59,7 @@ import { ContentModule } from './feature/content/content.module';
     //   signOptions: { expiresIn: '7d' },
     // }),
     JwtModule.registerAsync({
+      global: true,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

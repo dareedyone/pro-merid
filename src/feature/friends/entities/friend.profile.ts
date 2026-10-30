@@ -25,6 +25,9 @@ export class FriendProfile extends BaseTimeEntity {
   @Property({ default: false })
   socialize: boolean = false;
 
+  @Property({ nullable: true })
+  bio?: string;
+
   @ManyToMany(() => FocusedIntention)
   focusedIntentions = new Collection<FocusedIntention>(this);
 
@@ -41,7 +44,7 @@ export class FriendProfile extends BaseTimeEntity {
   usePinLocation?: boolean;
 
   @Property({ columnType: 'geometry(Point, 4326)' })
-  point: {
+  point!: {
     type: 'Point';
     coordinates: [number, number]; // [longitude, latitude]
   };
@@ -58,14 +61,11 @@ export class FriendProfile extends BaseTimeEntity {
   @Property({ nullable: true })
   pinnedLocation?: string;
 
-  @ManyToOne(() => Country)
+  @ManyToOne(() => Country, { nullable: true })
   country?: Country;
 
-  @ManyToOne(() => Country)
+  @ManyToOne(() => Country, { nullable: true })
   pinnedCountry?: Country;
-
-  @Property({ default: false })
-  idVerified?: boolean;
 
   @Property({ default: false })
   hidePictures?: boolean;

@@ -2,6 +2,23 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { AgoraService } from './agora.service';
 
+// Mock agora-token library - hoisted mock
+const mockBuildTokenWithUid = jest.fn((...args) => {
+  // Return a mock token string based on inputs
+  const [, , channelName, uid] = args;
+  return `mock_token_${channelName}_${uid}_${Date.now()}`;
+});
+
+jest.mock('agora-token', () => ({
+  RtcTokenBuilder: {
+    buildTokenWithUid: (...args: any[]) => mockBuildTokenWithUid(...args),
+  },
+  RtcRole: {
+    PUBLISHER: 1,
+    SUBSCRIBER: 2,
+  },
+}));
+
 describe('AgoraService', () => {
   let service: AgoraService;
   let configService: ConfigService;
@@ -98,10 +115,11 @@ describe('AgoraService', () => {
       expect(channelName).toMatch(/^chat_test-chat-id-123_\d+$/);
     });
 
-    it('should generate unique channel names for same chat ID', () => {
+    it('should generate unique channel names for same chat ID', async () => {
       const chatId = 'test-chat-id-123';
       const name1 = service.generateChannelName(chatId);
       // Small delay to ensure different timestamp
+      await new Promise((resolve) => setTimeout(resolve, 10));
       const name2 = service.generateChannelName(chatId);
       expect(name1).not.toBe(name2);
     });

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { FriendsService } from './services/friends.service';
 import { InteractionService } from '../../common/services/interaction.service';
@@ -15,6 +15,9 @@ import { ChatModule } from '../chat/chat.module';
 import { ActivityModule } from '../activity/activity.module';
 import { SubscriptionModule } from '../subscription/subscription.module';
 import { FriendController } from './friend.controller';
+import { Media } from '../user/entities/media.entity';
+import { Country } from '../location/entities/country.entity';
+import { Region } from '../location/entities/region.entity';
 
 @Module({
   imports: [
@@ -26,10 +29,13 @@ import { FriendController } from './friend.controller';
       FocusedIntentionCategory,
       FriendProfile,
       FriendFilter,
+      Media,
+      Country,
+      Region,
     ]),
     AuthModule,
     NotificationModule,
-    ChatModule,
+    forwardRef(() => ChatModule),
     ActivityModule,
     SubscriptionModule,
   ],

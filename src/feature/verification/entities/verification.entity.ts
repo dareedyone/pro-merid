@@ -13,7 +13,6 @@ export class Verification extends BaseTimeEntity {
   user!: User;
 
   @Property({
-    items: () => VerificationType,
     default: VerificationType.OTHER,
   })
   type: VerificationType;
@@ -22,7 +21,6 @@ export class Verification extends BaseTimeEntity {
   data?: Record<string, any>;
 
   @Property({
-    items: () => VerificationStatus,
     default: VerificationStatus.PENDING,
   })
   status: VerificationStatus;

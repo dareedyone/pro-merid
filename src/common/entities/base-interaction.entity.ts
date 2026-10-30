@@ -38,9 +38,6 @@ export abstract class BaseInteraction extends BaseTimeEntity {
   match?: Match;
 
   @Property()
-  createdAt!: Date;
-
-  @Property()
   updatedAt!: Date;
 
   // Abstract methods for feature-specific logic

@@ -77,7 +77,7 @@
 //   }
 // }
 
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Express } from 'express';
 import {
   S3Client,
@@ -98,6 +98,7 @@ import {
 
 @Injectable()
 export class S3Service {
+  private readonly logger = new Logger(S3Service.name);
   private readonly s3: S3Client;
   private readonly bucketName: string;
   private readonly region: string; // Added region as class property
@@ -177,7 +178,7 @@ export class S3Service {
   async deleteFile(url: string): Promise<void> {
     const s3Key = this.extractS3KeyFromUrl(url);
     if (!s3Key) {
-      console.warn(`Invalid S3 URL provided: ${url}`);
+      this.logger.warn(`Invalid S3 URL provided: ${url}`);
       return;
     }
 

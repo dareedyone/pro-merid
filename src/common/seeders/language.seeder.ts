@@ -1,7 +1,7 @@
 import type { EntityManager } from '@mikro-orm/core';
 import { Seeder } from '@mikro-orm/seeder';
 import ISO6391 from 'iso-639-1';
-import { Language } from '../entity/user/character/language.entity';
+import { Language } from '../../feature/user/entities/user/character/language.entity';
 
 export class LanguageSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {

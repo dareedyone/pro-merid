@@ -28,7 +28,8 @@ export class SubscriptionAnalyticsController {
     @Query('days') days?: string,
   ): Promise<SubscriptionTrends> {
     const daysNumber = days ? parseInt(days, 10) : 30;
-    return this.analyticsService.getSubscriptionTrends(daysNumber);
+    const validDays = isNaN(daysNumber) ? 30 : daysNumber;
+    return this.analyticsService.getSubscriptionTrends(validDays);
   }
 
   @Get('user')

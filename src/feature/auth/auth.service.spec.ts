@@ -10,6 +10,7 @@ import { getRepositoryToken } from '@mikro-orm/nestjs';
 import { Auth } from './entities/auth.entity';
 import { User } from '../user/entities/user/user.entity';
 import { Anchor } from '../anchor/entities/anchor.entity';
+import { OrmHelperService } from 'src/common/services/orm-helper.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -31,6 +32,9 @@ describe('AuthService', () => {
 
   const mockUserRepo = {};
   const mockAnchorRepo = {};
+  const mockOrmHelperService = {
+    findOrThrow: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,6 +45,7 @@ describe('AuthService', () => {
         { provide: AppleAuthService, useValue: mockAppleAuthService },
         { provide: EmailQueueService, useValue: mockEmailQueueService },
         { provide: EntityManager, useValue: mockEm },
+        { provide: OrmHelperService, useValue: mockOrmHelperService },
         { provide: getRepositoryToken(Auth), useValue: mockAuthRepo },
         { provide: getRepositoryToken(User), useValue: mockUserRepo },
         { provide: getRepositoryToken(Anchor), useValue: mockAnchorRepo },
@@ -58,7 +63,7 @@ describe('AuthService', () => {
     mockAuthRepo.findOne.mockResolvedValueOnce(null);
     mockAuthRepo.create.mockReturnValueOnce({
       email: 'test@example.com',
-      lastCodeSentAt: new Date(Date.now() - 1000),
+      lastCodeSentAt: null, // No previous code sent
     });
 
     await service.sendEmailCode({ email: 'test@example.com' });
@@ -70,10 +75,11 @@ describe('AuthService', () => {
   });
 
   it('should throw if code requested too soon', async () => {
-    const now = new Date();
+    // Set lastCodeSentAt to a recent time (within 60 seconds)
+    const recentTime = new Date(Date.now() - 30000); // 30 seconds ago
     mockAuthRepo.findOne.mockResolvedValueOnce({
       email: 'test@example.com',
-      lastCodeSentAt: now,
+      lastCodeSentAt: recentTime, // Just sent 30 seconds ago, so within 60 second window
     });
 
     await expect(

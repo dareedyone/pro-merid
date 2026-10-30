@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AnalyticsController } from './analytics-subscription.controller';
+import { SubscriptionAnalyticsController } from './analytics-subscription.controller';
 import { SubscriptionAnalyticsService } from '../services/analytics-subscription.service';
+import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles.guard';
 
-describe('AnalyticsController', () => {
-  let controller: AnalyticsController;
+describe('SubscriptionAnalyticsController', () => {
+  let controller: SubscriptionAnalyticsController;
   let mockAnalyticsService: any;
 
   beforeEach(async () => {
@@ -14,16 +16,21 @@ describe('AnalyticsController', () => {
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AnalyticsController],
+      controllers: [SubscriptionAnalyticsController],
       providers: [
         {
           provide: SubscriptionAnalyticsService,
           useValue: mockAnalyticsService,
         },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .overrideGuard(RolesGuard)
+      .useValue({ canActivate: jest.fn(() => true) })
+      .compile();
 
-    controller = module.get<AnalyticsController>(AnalyticsController);
+    controller = module.get<SubscriptionAnalyticsController>(SubscriptionAnalyticsController);
   });
 
   it('should be defined', () => {
@@ -90,22 +97,17 @@ describe('AnalyticsController', () => {
 
       mockAnalyticsService.getSubscriptionTrends.mockResolvedValue(mockTrends);
 
-      const result = await controller.getSubscriptionTrends(
-        startDate.toISOString(),
-        endDate.toISOString(),
-      );
+      const result = await controller.getSubscriptionTrends('30');
 
       expect(result).toEqual(mockTrends);
-      expect(mockAnalyticsService.getSubscriptionTrends).toHaveBeenCalledWith(
-        startDate,
-        endDate,
-      );
+      expect(mockAnalyticsService.getSubscriptionTrends).toHaveBeenCalledWith(30);
     });
 
     it('should handle invalid date format', async () => {
-      await expect(
-        controller.getSubscriptionTrends('invalid-date', '2024-01-31'),
-      ).rejects.toThrow();
+      // The controller only accepts days as a number, not date strings
+      const result = await controller.getSubscriptionTrends('invalid');
+      // It will parse as NaN and use default of 30
+      expect(mockAnalyticsService.getSubscriptionTrends).toHaveBeenCalledWith(30);
     });
 
     it('should handle service errors', async () => {
@@ -113,7 +115,7 @@ describe('AnalyticsController', () => {
       mockAnalyticsService.getSubscriptionTrends.mockRejectedValue(error);
 
       await expect(
-        controller.getSubscriptionTrends('2024-01-01', '2024-01-31'),
+        controller.getSubscriptionTrends('30'),
       ).rejects.toThrow('Analytics service unavailable');
     });
   });
@@ -121,6 +123,11 @@ describe('AnalyticsController', () => {
   describe('getUserSubscriptionMetrics', () => {
     it('should return user subscription metrics', async () => {
       const userId = 'user-123';
+      const mockRequest = {
+        user: {
+          sub: userId,
+        },
+      } as any;
       const mockMetrics = {
         totalSpent: 1500,
         totalSubscriptions: 7,
@@ -132,7 +139,7 @@ describe('AnalyticsController', () => {
 
       mockAnalyticsService.getUserSubscriptionMetrics.mockResolvedValue(mockMetrics);
 
-      const result = await controller.getUserSubscriptionMetrics(userId);
+      const result = await controller.getUserSubscriptionMetrics(mockRequest);
 
       expect(result).toEqual(mockMetrics);
       expect(mockAnalyticsService.getUserSubscriptionMetrics).toHaveBeenCalledWith(userId);
@@ -140,6 +147,11 @@ describe('AnalyticsController', () => {
 
     it('should handle user with no subscriptions', async () => {
       const userId = 'user-no-subs';
+      const mockRequest = {
+        user: {
+          sub: userId,
+        },
+      } as any;
       const mockMetrics = {
         totalSpent: 0,
         totalSubscriptions: 0,
@@ -151,7 +163,7 @@ describe('AnalyticsController', () => {
 
       mockAnalyticsService.getUserSubscriptionMetrics.mockResolvedValue(mockMetrics);
 
-      const result = await controller.getUserSubscriptionMetrics(userId);
+      const result = await controller.getUserSubscriptionMetrics(mockRequest);
 
       expect(result).toEqual(mockMetrics);
       expect(mockAnalyticsService.getUserSubscriptionMetrics).toHaveBeenCalledWith(userId);
@@ -159,10 +171,15 @@ describe('AnalyticsController', () => {
 
     it('should handle service errors', async () => {
       const userId = 'user-123';
+      const mockRequest = {
+        user: {
+          sub: userId,
+        },
+      } as any;
       const error = new Error('User not found');
       mockAnalyticsService.getUserSubscriptionMetrics.mockRejectedValue(error);
 
-      await expect(controller.getUserSubscriptionMetrics(userId)).rejects.toThrow(
+      await expect(controller.getUserSubscriptionMetrics(mockRequest)).rejects.toThrow(
         'User not found',
       );
     });
@@ -183,9 +200,6 @@ describe('AnalyticsController', () => {
 
   describe('data validation', () => {
     it('should validate date range for trends', async () => {
-      const startDate = new Date('2024-01-01');
-      const endDate = new Date('2023-12-31'); // End date before start date
-
       // The service should handle invalid date ranges gracefully
       mockAnalyticsService.getSubscriptionTrends.mockResolvedValue({
         daily: [],
@@ -193,10 +207,7 @@ describe('AnalyticsController', () => {
         monthly: [],
       });
 
-      const result = await controller.getSubscriptionTrends(
-        startDate.toISOString(),
-        endDate.toISOString(),
-      );
+      const result = await controller.getSubscriptionTrends('30');
 
       expect(result).toEqual({
         daily: [],
@@ -207,10 +218,15 @@ describe('AnalyticsController', () => {
 
     it('should validate user ID format', async () => {
       const invalidUserId = '';
+      const mockRequest = {
+        user: {
+          sub: invalidUserId,
+        },
+      } as any;
       const error = new Error('Invalid user ID');
       mockAnalyticsService.getUserSubscriptionMetrics.mockRejectedValue(error);
 
-      await expect(controller.getUserSubscriptionMetrics(invalidUserId)).rejects.toThrow(
+      await expect(controller.getUserSubscriptionMetrics(mockRequest)).rejects.toThrow(
         'Invalid user ID',
       );
     });
@@ -218,25 +234,16 @@ describe('AnalyticsController', () => {
 
   describe('performance considerations', () => {
     it('should handle large date ranges efficiently', async () => {
-      const startDate = new Date('2020-01-01');
-      const endDate = new Date('2024-12-31'); // 5 year range
-
       mockAnalyticsService.getSubscriptionTrends.mockResolvedValue({
         daily: [], // Large datasets might be empty or limited
         weekly: [],
         monthly: [],
       });
 
-      const result = await controller.getSubscriptionTrends(
-        startDate.toISOString(),
-        endDate.toISOString(),
-      );
+      const result = await controller.getSubscriptionTrends('365'); // 1 year
 
       expect(result).toBeDefined();
-      expect(mockAnalyticsService.getSubscriptionTrends).toHaveBeenCalledWith(
-        startDate,
-        endDate,
-      );
+      expect(mockAnalyticsService.getSubscriptionTrends).toHaveBeenCalledWith(365);
     });
   });
 });

@@ -83,25 +83,25 @@ describe('SubscriptionHistory Entity', () => {
     });
 
     it('should handle nullable fields', () => {
-      subscriptionHistory.expiresAt = null;
-      subscriptionHistory.cancelledAt = null;
-      subscriptionHistory.transactionId = null;
-      subscriptionHistory.productId = null;
-      subscriptionHistory.amount = null;
-      subscriptionHistory.currency = null;
-      subscriptionHistory.receiptData = null;
-      subscriptionHistory.reason = null;
-      subscriptionHistory.metadata = null;
+      subscriptionHistory.expiresAt = undefined;
+      subscriptionHistory.cancelledAt = undefined;
+      subscriptionHistory.transactionId = undefined;
+      subscriptionHistory.productId = undefined;
+      subscriptionHistory.amount = undefined;
+      subscriptionHistory.currency = undefined;
+      subscriptionHistory.receiptData = undefined;
+      subscriptionHistory.reason = undefined;
+      subscriptionHistory.metadata = undefined;
 
-      expect(subscriptionHistory.expiresAt).toBeNull();
-      expect(subscriptionHistory.cancelledAt).toBeNull();
-      expect(subscriptionHistory.transactionId).toBeNull();
-      expect(subscriptionHistory.productId).toBeNull();
-      expect(subscriptionHistory.amount).toBeNull();
-      expect(subscriptionHistory.currency).toBeNull();
-      expect(subscriptionHistory.receiptData).toBeNull();
-      expect(subscriptionHistory.reason).toBeNull();
-      expect(subscriptionHistory.metadata).toBeNull();
+      expect(subscriptionHistory.expiresAt).toBeUndefined();
+      expect(subscriptionHistory.cancelledAt).toBeUndefined();
+      expect(subscriptionHistory.transactionId).toBeUndefined();
+      expect(subscriptionHistory.productId).toBeUndefined();
+      expect(subscriptionHistory.amount).toBeUndefined();
+      expect(subscriptionHistory.currency).toBeUndefined();
+      expect(subscriptionHistory.receiptData).toBeUndefined();
+      expect(subscriptionHistory.reason).toBeUndefined();
+      expect(subscriptionHistory.metadata).toBeUndefined();
     });
   });
 

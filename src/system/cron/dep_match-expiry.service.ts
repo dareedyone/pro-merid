@@ -146,7 +146,8 @@ export class MatchExpiryService {
     const notificationContexts = Array.from(userNotifications.entries()).map(
       ([userId, matches]) => {
         const match = matches[0];
-        const timeLeft = this.calculateTimeLeft(match.matchedAt);
+        const matchedAt = match.matchedAt;
+        const timeLeft = this.calculateTimeLeft(matchedAt);
 
         // Determine the other user for this notification
         const otherUserId =
@@ -294,7 +295,10 @@ export class MatchExpiryService {
     }
   }
 
-  private calculateTimeLeft(matchedAt: Date): string {
+  private calculateTimeLeft(matchedAt?: Date): string {
+    if (!matchedAt || typeof matchedAt !== 'object')
+      throw new Error('MatchedAt is not specified');
+
     const now = new Date();
     const timeLeft = matchedAt.getTime() + 48 * 60 * 60 * 1000 - now.getTime();
 

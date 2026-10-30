@@ -4,11 +4,11 @@ import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateDatingProfileDto {
   @IsEnum(DateIntention)
-  intention: DateIntention;
+  intention!: DateIntention;
 
   @IsArray()
   @IsEnum(Gender, { each: true })
-  gendersInterestedIn: Gender[];
+  gendersInterestedIn!: Gender[];
 
   @IsOptional()
   @IsBoolean()

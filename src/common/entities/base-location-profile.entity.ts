@@ -1,4 +1,4 @@
-import { Enum, ManyToOne, Property } from '@mikro-orm/core';
+import { ManyToOne, Property } from '@mikro-orm/core';
 import { BaseTimeEntity } from './base.entity';
 import { LocationType } from 'src/common/types/enums/user.enum';
 // import { User } from 'src/feature/user/entities/user/user.entity';
@@ -12,7 +12,7 @@ export interface GeoPoint {
 
 export abstract class BaseLocationProfileEntity extends BaseTimeEntity {
   @Property({ type: 'text' }) // todo: review current due to flight mode
-  type: LocationType;
+  type!: LocationType;
 
   // @ManyToOne(() => User)
   // user!: User;
@@ -21,7 +21,7 @@ export abstract class BaseLocationProfileEntity extends BaseTimeEntity {
   usePinLocation?: boolean;
 
   @Property({ columnType: 'geometry(Point, 4326)' })
-  point: GeoPoint;
+  point!: GeoPoint;
 
   @Property({ columnType: 'geometry(Point, 4326)', nullable: true })
   pinnedPoint?: GeoPoint;

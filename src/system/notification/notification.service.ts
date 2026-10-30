@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ChatGateway } from '../../feature/chat/chat.gateway';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { IWebSocketNotifier } from '../../common/types/interface/websocket-notifier.interface';
 import { PushNotificationService } from './push-notification.service';
 import { EmailQueueService } from '../queue/email/email.qservice';
 import { UserService } from '../../feature/user/user.service';
@@ -69,7 +69,8 @@ export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
   constructor(
-    private readonly chatGateway: ChatGateway,
+    @Inject('WEBSOCKET_NOTIFIER')
+    private readonly webSocketNotifier: IWebSocketNotifier,
     private readonly pushNotificationService: PushNotificationService,
     private readonly emailQueueService: EmailQueueService,
     private readonly userService: UserService,
@@ -191,7 +192,7 @@ export class NotificationService {
   private async tryWebSocketNotification(
     context: NotificationContext,
   ): Promise<boolean> {
-    if (!(await this.chatGateway.isUserConnected(context.userId))) {
+    if (!(await this.webSocketNotifier.isUserConnected(context.userId))) {
       this.logger.debug(`User ${context.userId} not connected via WebSocket`);
       return false;
     }
@@ -213,7 +214,7 @@ export class NotificationService {
 
     switch (type) {
       case 'match':
-        await this.chatGateway.notifyNewMatch(
+        await this.webSocketNotifier.notifyNewMatch(
           userId,
           data.matchedUserId!,
           data.chatId || null,
@@ -225,7 +226,7 @@ export class NotificationService {
         break;
 
       case 'unmatch':
-        await this.chatGateway.notifyChatArchived(data.chatId!, [
+        await this.webSocketNotifier.notifyChatArchived(data.chatId!, [
           userId,
           data.matchedUserId!,
         ]);

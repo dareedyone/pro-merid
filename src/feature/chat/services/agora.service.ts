@@ -77,6 +77,10 @@ export class AgoraService implements ICallProvider {
       };
     } catch (error) {
       this.logger.error('Failed to generate Agora token:', error);
+      // Preserve original error message if it's a validation error
+      if (error instanceof Error && error.message.includes('Invalid auth ID')) {
+        throw error;
+      }
       throw new Error('Failed to generate Agora token');
     }
   }

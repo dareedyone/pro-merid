@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSupportDto } from './dto/create-support-message.dto';
+import { CreateSupportMessageDto } from './dto/create-support-message.dto';
 import { UpdateSupportDto } from './dto/update-support.dto';
 
 @Injectable()
 export class SupportService {
-  create(createSupportDto: CreateSupportDto) {
+  create(createSupportDto: CreateSupportMessageDto) {
     return 'This action adds a new support';
   }
 

@@ -17,7 +17,7 @@ import { ConfigService } from '@nestjs/config';
       useFactory: (config: ConfigService) => {
         const useSendGrid = config.get<string>('USE_SENDGRID') === 'true';
         return useSendGrid
-          ? new SendgridProvider()
+          ? new SendgridProvider(config)
           : new NodemailerProvider(config);
       },
     },

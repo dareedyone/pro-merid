@@ -49,9 +49,6 @@ export abstract class BaseMatch extends BaseTimeEntity {
   matchedAt!: Date;
 
   @Property()
-  createdAt!: Date;
-
-  @Property()
   updatedAt!: Date;
 
   // Abstract methods for feature-specific logic

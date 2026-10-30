@@ -18,6 +18,7 @@ import {
   NotificationService,
   NotificationType,
 } from '../../system/notification/notification.service';
+import { IWebSocketNotifier } from '../../common/types/interface/websocket-notifier.interface';
 import { SendMessageDto } from './dto/send-message.dto';
 import {
   AddReactionDto,
@@ -30,7 +31,7 @@ import { ActivityTrackerService } from '../activity/activity-tracker.service';
 import { RedisService } from '../../system/cache/redis.service';
 import { ChatMessageDto } from './dto/chat-response.dto';
 
-interface AuthenticatedSocket extends Socket {
+export interface AuthenticatedSocket extends Socket {
   userId?: string;
   userProfileId?: string;
 }
@@ -44,10 +45,14 @@ interface AuthenticatedSocket extends Socket {
   namespace: '/chats',
 })
 export class ChatGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+  implements
+    OnGatewayInit,
+    OnGatewayConnection,
+    OnGatewayDisconnect,
+    IWebSocketNotifier
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(ChatGateway.name);
   private disconnectionTimers = new Map<string, NodeJS.Timeout>();

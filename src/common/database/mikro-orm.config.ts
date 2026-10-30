@@ -38,13 +38,14 @@
 // src/database/mikroorm.config.ts
 import type { MikroOrmModuleOptions } from '@mikro-orm/nestjs';
 import type { ConfigService } from '@nestjs/config';
+import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { User } from '../../feature/user/entities/user/user.entity';
 import { Auth } from 'src/feature/auth/entities/auth.entity';
 
 export const mikroOrmConfigFactory = (
   configService: ConfigService,
 ): MikroOrmModuleOptions => ({
-  // type: 'postgresql',
+  driver: PostgreSqlDriver,
   dbName: configService.get('POSTGRES_DB'),
   user: configService.get('POSTGRES_USER'),
   password: configService.get('POSTGRES_PASSWORD'),

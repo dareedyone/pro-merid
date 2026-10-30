@@ -104,7 +104,6 @@ export class OsmLocationSeeder extends Seeder {
         phoneCode,
         flag,
         emoji,
-        continent,
         region,
       });
 

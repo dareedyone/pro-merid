@@ -16,7 +16,6 @@ import { NotificationQueueService } from './notification/notification.qservice';
 import { NotificationQueueWorker } from './notification/notification.queue';
 import { ConfigService } from '@nestjs/config';
 import { EmailModule } from '../email/email.module';
-import { EmailService } from '../email/email.service';
 import { AwsModule } from '../aws/aws.module';
 import { S3Service } from '../aws/s3.service';
 import { RekognitionService } from '../aws/rekognition.service';
@@ -26,6 +25,10 @@ import { ActivityModule } from '../../feature/activity/activity.module';
 import { RedisCacheModule } from '../cache/redis-cache.module';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ProfileInteraction } from '../../feature/user/entities/profile/profile-interaction.entity';
+import { UserModule } from 'src/feature/user/user.module';
+import { DatingModule } from 'src/feature/dating/dating.module';
+import { FriendsModule } from 'src/feature/friends/friends.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Global()
 @Module({
@@ -58,6 +61,10 @@ import { ProfileInteraction } from '../../feature/user/entities/profile/profile-
     AwsModule,
     ActivityModule,
     RedisCacheModule,
+    UserModule,
+    DatingModule,
+    FriendsModule,
+    NotificationModule,
   ],
   providers: [
     JobContextService,
@@ -70,7 +77,6 @@ import { ProfileInteraction } from '../../feature/user/entities/profile/profile-
     MediaQueueService,
     ActivityQueueService,
     NotificationQueueService,
-    EmailService,
     S3Service,
     RekognitionService,
   ],
@@ -80,6 +86,7 @@ import { ProfileInteraction } from '../../feature/user/entities/profile/profile-
     ActivityQueueService,
     NotificationQueueService,
     JobContextService,
+    ActivityProcessor,
   ],
 })
 export class QueueModule {}

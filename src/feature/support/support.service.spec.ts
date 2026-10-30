@@ -16,4 +16,14 @@ describe('SupportService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('should create support message', () => {
+    const dto = {
+      senderType: 'user' as const,
+      senderId: 'user-123',
+      text: 'test message',
+    };
+    const result = service.create(dto);
+    expect(result).toBe('This action adds a new support');
+  });
 });

@@ -18,14 +18,17 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Specfynd API')
-    .setDescription('The specfind api')
+    .setDescription('The Specfynd API documentation')
     .setVersion('1.0')
-    .addTag('cats')
+    .addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  app.enableCors();
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true,
+  });
   app.use(helmet());
   app.useGlobalPipes(
     new ValidationPipe({

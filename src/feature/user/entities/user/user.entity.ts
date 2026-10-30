@@ -137,6 +137,10 @@ export class User {
   @Property({ nullable: true })
   isFaceVerified?: boolean = false; // todo handle face verification
 
+  // todo: update when there is at least one id verified
+  @Property({ default: false })
+  idVerified?: boolean;
+
   @Property({ nullable: true })
   ageVerified?: boolean = false;
 
