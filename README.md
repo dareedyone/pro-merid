@@ -1,98 +1,169 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Specfynd Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Specfynd is a backend application for a community-oriented platform that brings together dating, friendships, and social interactions. This repository contains the server-side application built with NestJS and TypeScript.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+The backend is organised into feature modules and shared infrastructure components to support authentication, user and profile management, social interactions, messaging, and other platform functionality.
 
-## Description
+Project status: Under active development. Some integrations and workflows may be incomplete. Review the relevant implementation and configuration before using the application in a production environment.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Features
 
-## Project setup
+The codebase includes modules and services for:
 
-```bash
-$ pnpm install
+- Authentication and users — authentication flows, user management, and access control.
+- Dating and profiles — dating-related functionality and profile management.
+- Friends and social interactions — friend-oriented functionality and connections.
+- Chat and communication — messaging, WebSocket communication, and call-related services.
+- Content and activity — content management and activity-related functionality.
+- Location — location-related services.
+- Subscriptions — subscription management and app-store-related webhook processing.
+- Administration and support — administrative and support functionality.
+- Background processing — queues, scheduled tasks, caching, and recurring jobs.
+- API documentation — Swagger documentation exposed by the application.
+
+The completeness and production readiness of individual features vary. In particular, payment verification and certain external-provider integrations require further implementation and validation.
+
+## Technology Stack
+
+The project uses:
+
+- Runtime: Node.js
+- Language: TypeScript
+- Framework: NestJS
+- Relational database: PostgreSQL, accessed through MikroORM
+- Document database: MongoDB, accessed through Mongoose
+- Caching and queues: Redis and Bull
+- Real-time communication: Socket.IO and NestJS WebSockets
+- API documentation: Swagger
+- Testing: Jest
+- Package manager: pnpm
+- Containerisation: Docker
+
+Additional dependencies support authentication, validation, scheduled tasks, notifications, file storage, and other integrations.
+
+## Prerequisites
+
+Install or provide:
+
+- Node.js 20 or a compatible version supported by the project.
+- pnpm.
+- PostgreSQL.
+- MongoDB.
+- Redis.
+
+External integrations may require additional configuration, depending on which features you intend to run.
+
+## Getting Started
+
+### 1. Clone the repository
+
+```
+git clone https://github.com/dareedyone/pro-merid.git
+cd pro-merid
 ```
 
-## Compile and run the project
+### 2. Install dependencies
 
-```bash
-# development
-$ pnpm run start
+`pnpm install --frozen-lockfile`
 
-# watch mode
-$ pnpm run start:dev
+### 3. Configure environment variables
 
-# production mode
-$ pnpm run start:prod
-```
+Copy the example configuration to a local development environment file:
 
-## Run tests
+`cp .env.example .env.development`
 
-```bash
-# unit tests
-$ pnpm run test
+Update the file with your local database connection details and appropriate development configuration.
 
-# e2e tests
-$ pnpm run test:e2e
+Do not commit .env.development, .env.production, or other files containing local credentials or secrets.
 
-# test coverage
-$ pnpm run test:cov
-```
+The example environment file is a starting point, not a guarantee that every feature’s configuration is covered. Check the configuration factories and relevant services for additional variables required by the features you intend to use.
 
-## Deployment
+### 4. Start the application
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Run the application in development mode:
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+`pnpm run start:dev`
 
-```bash
-$ pnpm install -g mau
-$ mau deploy
-```
+The application defaults to port 3000. The port can be configured using the PORT environment variable.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The application requires its configured dependencies to be available. Database connection failures or missing configuration may prevent startup.
 
-## Resources
+## API Documentation
 
-Check out a few resources that may come in handy when working with NestJS:
+When the application starts successfully, Swagger documentation is configured at:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+`http://localhost:3000/api`
 
-## Support
+The API root is available at:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+`http://localhost:3000/`
 
-## Stay in touch
+The root endpoint returns a basic application response; it is not a comprehensive health check for every dependency.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Build and Run
 
-## License
+Build the application:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+`pnpm run build`
+
+Run the compiled application:
+
+`pnpm run start:prod`
+
+Run the application in development mode with automatic reload:
+
+`pnpm run start:dev`
+
+## Testing
+
+Run the unit test suite:
+
+`pnpm run test`
+
+Run tests serially:
+
+`pnpm run test:serial`
+
+Run tests with coverage reporting:
+
+`pnpm run test:cov`
+
+Run end-to-end tests:
+
+`pnpm run test:e2e`
+
+Some tests or application flows may require additional configuration or external dependencies. Review test output rather than assuming that every external integration is exercised by the test suite.
+
+## Docker
+
+The repository includes a Dockerfile for building the application image.
+
+Build the image from the repository root:
+
+`docker build -t specfynd-backend .`
+
+The container expects its runtime configuration to be supplied through environment variables or an appropriate runtime environment file. Do not bake production credentials into the image.
+
+For local development, provide the required configuration when starting the container. Ensure the relevant databases and other dependencies are reachable from the container.
+
+## Security and Production Readiness
+
+Before deploying the application for real users:
+
+- Use strong, unique secrets and supply them through a secure configuration mechanism.
+- Restrict CORS to the appropriate application origins.
+- Verify authentication and authorisation rules for protected operations.
+- Implement and validate the official verification mechanisms required by external subscription providers.
+- Ensure subscription events are processed safely, including duplicate deliveries.
+- Validate external-provider tokens and payloads before trusting them.
+- Configure database access, network permissions, logging, and monitoring appropriately.
+
+Features with placeholder verification or incomplete external integrations should not be treated as production-ready.
+
+## Contributing
+
+This repository is under active development. Changes should preserve existing functionality and include appropriate tests for new behaviour and bug fixes.
+
+## Licence
+
+See the repository’s LICENSE file if one is added. Until a licence is explicitly selected and published, do not assume that the source code is licensed for unrestricted reuse.

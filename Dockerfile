@@ -1,9 +1,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /usr/src/app
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@12.15.0
 
-COPY pnpm-lock.yaml package.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
@@ -15,7 +15,7 @@ RUN pnpm run build
 FROM node:20-alpine
 WORKDIR /usr/src/app
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@12.15.0
 
 # Set default environment to development, override with --build-arg
 ARG NODE_ENV=development
@@ -26,9 +26,6 @@ ENV NODE_ENV=${NODE_ENV}
 COPY --from=builder /usr/src/app/dist ./dist
 COPY --from=builder /usr/src/app/node_modules ./node_modules
 COPY --from=builder /usr/src/app/package.json ./package.json
-
-# Copy the correct .env file
-COPY .env.${NODE_ENV} .env
 
 # Expose NestJS default port
 EXPOSE 3000
